@@ -1,7 +1,7 @@
 rm(list=ls())
 
 getwd()
-directorio <- "/Users/stefa/Documents/RWorkplace/"
+directorio <- "/Users/stefa/Documents/Code/Political_Economy/"
 setwd(directorio)
 
 # Load libraries/packages
@@ -9,9 +9,9 @@ lapply(c("rio","here","data.table","dplyr","ggplot","RColorBrewer","viridis","ar
 
 # Load data using relative hierarchy
 
-exp <- read.csv("code/data/country-level-government-spending-vs-income.csv")
+exp <- read.csv("data/country-level-government-spending-vs-income.csv")
 #exp <- import(here("slides","epol","data","country-level-government-spending-vs-income.csv"),header=TRUE)
-tax <- read.csv("code/data/country-level-taxes-vs-income.csv")
+tax <- read.csv("data/country-level-taxes-vs-income.csv")
 #tax <- import(here("slides","epol","data","country-level-taxes-vs-income.csv"),header=TRUE)
 
 # Clean data, drop cases

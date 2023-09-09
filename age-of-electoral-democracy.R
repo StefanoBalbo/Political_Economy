@@ -1,16 +1,16 @@
 rm(list=ls())
 
 getwd()
-directorio <- "/Users/stefa/Documents/RWorkplace/"
+directorio <- "/Users/stefa/Documents/Code/Political_Economy/"
 setwd(directorio)
 
 # Load libraries/packages
 lapply(c("rio","here","data.table","dplyr","tmap","sf","RColorBrewer","viridis","areaplot","ggthemes"),require,character.only=TRUE)
 
 # Load data and geography using relative hierarchy
-dem <- read.csv("code/data/age-of-electoral-democracy.csv")
+dem <- read.csv("data/age-of-electoral-democracy.csv")
 #dem  <- rio::import(here("slides","epol","data","age-of-electoral-democracy.csv")) %>% data.table()
-map <- st_read("code/data/") # FALTA ESTE MAPA
+map <- st_read("data//") # FALTA ESTE MAPA
 map <- here("maps","World_Countries__Generalized_.shp") %>% st_read()
 
 # Join data and geography, create categories
