@@ -1,43 +1,40 @@
 ############################### ECO POL 2023 ##################################
-############################### DATOS MESAS ###################################
 rm(list=ls())
+
+library(dplyr)
+library(data.table)
+
+############################### DATOS MESAS ###################################
 
 directorio <- "/Users/IDECOR/Documents/Code/Political_Economy/datos_mesas/"
 setwd(directorio)
 getwd()
 
-datos <- read.csv("votacion.csv")
-names(datos)
+{
+  print("Importamos los datos")
+datos <- fread(paste0(directorio, "votacion.csv"), sep = ",", dec = ".")
+agrupaciones <- fread(paste0(directorio, "agrupacion.csv"), sep = ",", dec = ".")
+listas <- fread(paste0(directorio, "lista.csv"), sep = ",", dec = ".")
+mesas <-  fread(paste0(directorio, "mesa.csv"), sep = ",", dec = ".")
+cargos <-  fread(paste0(directorio, "cargo.csv"), sep = ",", dec = ".")
+tdv <-  fread(paste0(directorio, "tipovoto.csv"), sep = ",", dec = ".")
+elecciontipo <-  fread(paste0(directorio, "eleccion.csv"), sep = ",", dec = ".")
+circuito <- fread(paste0(directorio, "circuito.csv"), sep = ",", dec = ".")
+provincias <- fread(paste0(directorio, "distrito.csv"), sep = ",", dec = ".")
+seccion <- fread(paste0(directorio, "seccion.csv"), sep = ",", dec = ".")
+seccion_prov <-fread(paste0(directorio, "seccionprovincial.csv"), sep = ",", dec = ".")
+}
+
 head(datos)
-
-agrupaciones <- read.csv("agrupacion.csv")
 head(agrupaciones)
-
-listas <- read.csv("lista.csv")
 head(listas)
-
-mesas <- read.csv("mesa.csv")
 head(mesas)
-
-cargos <- read.csv("cargo.csv")
 cargos
-
-tdv <- read.csv("tipovoto.csv")
 tdv
-
-elecciontipo <- read.csv("eleccion.csv")
 elecciontipo
-
-circuito <-  read.csv("circuito.csv")
 head(circuito)
-
-provincias <- read.csv("distrito.csv")
 table(provincias$nombre); names(provincias)
-
-seccion <- read.csv("seccion.csv")
 head(seccion)
-
-seccion_prov <- read.csv("seccionprovincial.csv")
 head(seccion_prov)
 
 ###############################################################################
@@ -46,7 +43,6 @@ head(seccion_prov)
 names(datos)
 names(provincias)
 
-library(dplyr)
 datos_provincias <- left_join(datos, provincias, by = "distrito_id")
 names(datos_provincias)
 
