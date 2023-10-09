@@ -101,17 +101,86 @@ datos <- datos2; rm(datos2, tdv); names(datos)
 rm(circuito, listas, seccion, seccion_prov)
 
 head(datos)
-table(datos$cargo_nombre)
 table(datos$eleccion_tipo)
+
+datos$eleccion_tipo <- ifelse(datos$eleccion_tipo == "GENERAL", "GENERALES", datos$eleccion_tipo)
+
+table(datos$eleccion_tipo)
+
 table(datos$tdv)
 table(datos$distrito_nombre)
 
-############################################################################
-
-names(agrupaciones)
-table(agrupaciones$agrupacion_id)
-table(agrupaciones$nombre)
+getwd()
+saveRDS(datos, "datos_sinagrup", compress = FALSE)
+#write.csv(datos, "datos.csv")
 
 
+# FALTA DEFINIR AGRUPACIONES
+names(agrupaciones) ################################################ !
+################################################
 
 
+############################# FILTRAR DATOS ###########################
+
+names(datos)
+head(datos)
+table(datos$cargo_nombre)
+
+{
+  print("Filtramos elecciones por cargo")
+presidencial <- datos %>%
+  filter(cargo_nombre == "Presidente")
+
+gobernador <- datos %>%
+  filter(cargo_nombre == "Gobernador")
+}
+
+names(datos)
+table(datos$eleccion_tipo)
+
+{
+  print("Filtramos elecciones por tipo")
+PASO <- datos %>%
+  filter(eleccion_tipo == "PASO")
+
+GENERALES <- datos %>%
+  filter(eleccion_tipo == "GENERALES")
+
+BALLOTAGE <- datos %>%
+  filter(eleccion_tipo == "BALLOTAGE")
+}
+
+table(datos$anio)
+{
+  print("Filtramos elecciones por año")
+
+elecciones2011 <- datos %>%
+  filter(anio == "2011")
+
+elecciones2013 <- datos %>%
+  filter(anio == "2013")
+
+elecciones2015 <- datos %>%
+  filter(anio == "2015")
+
+elecciones2017 <- datos %>%
+  filter(anio == "2017")
+
+elecciones2019 <- datos %>%
+  filter(anio == "2019")
+
+elecciones2021 <- datos %>%
+  filter(anio == "2021")
+
+elecciones2023 <- datos %>%
+  filter(anio == "2023")
+}
+
+
+######################## FILTRO MIXTO ########################
+
+PASO2019 <- datos %>%
+  filter(eleccion_tipo == "PASO") %>%
+  filter(anio == "2019") %>%
+  filter(cargo_nombre == "Presidente")
+head(PASO2019)
