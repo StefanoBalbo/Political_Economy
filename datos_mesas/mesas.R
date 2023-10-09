@@ -6,7 +6,8 @@ library(data.table)
 
 ############################### DATOS MESAS ###################################
 
-directorio <- "/Users/IDECOR/Documents/Code/Political_Economy/datos_mesas/"
+#directorio <- "/Users/IDECOR/Documents/Code/Political_Economy/datos_mesas/"
+directorio <- "/Users/stefa/Documents/Code/Political_Economy/datos_mesas/"
 setwd(directorio)
 getwd()
 
