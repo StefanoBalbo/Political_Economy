@@ -49,7 +49,7 @@ migracion %>%
   geom_flow() +
   # scale_fill_viridis_d() +
   scale_fill_manual(values=c("yellow", "purple", "blue",
-                                    "white", "white", "orange","skyblue")) +
+                                    "grey", "grey", "orange","skyblue")) +
                                       theme_minimal() +
   theme(legend.position = "bottom",
         axis.title.y = element_text(angle = 0, hjust = 0)) +
@@ -59,4 +59,4 @@ migracion %>%
     arrow = arrow(length=unit(0.30,"cm"), 
                   ends="first", 
                   type = "closed"))
-
+#ggsave("migracion_plot.jpeg", last_plot())
