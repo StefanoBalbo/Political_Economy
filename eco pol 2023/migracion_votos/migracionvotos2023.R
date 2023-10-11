@@ -3,43 +3,57 @@ library(googlesheets4)
 library(tidyverse)
 
 getwd()
-setwd("/Users/IDECOR/Documents/Code/Eco-Pol/")
+setwd("/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/"); getwd()
 
-datos <- read_sheet('https://docs.google.com/spreadsheets/d/1N_tbyCh6_1AdAFlEhW5HSpMJ_048gIiBM8-ffJix50U/edit?usp=sharing')
+#gs4_deauth()
+#gs4_auth()
+datos <- read_sheet('https://docs.google.com/spreadsheets/d/1fXkkvYr6ZeD9N2YGAPV78o78lJX4apR6dBvK6-OTdBE/edit?usp=sharing')
 
 head(datos)
 names(datos)
 
+migracion <- datos[, -c(2, 3, 4, 5, 6, 8, 9, 10)]; names(migracion)
+
+migracion <- rename(migracion,  "id" = "Marca temporal",
+                                "voto_gen" = "¿Cuál sería su intención de voto en las elecciones generales?",
+                                "voto_paso" =  "¿A quién votaste en las PASO?")
+names(migracion)
+migracion$id <- 1:43
+head(migracion)
+class(migracion)
+migracion <- as.data.frame(migracion); class(migracion)
+
 ##########################################
 
+#df = datos[,c("voto", "voto_paso")]
+#df$id = 1:nrow(datos)
+migracion = gather(migracion, escenario, voto, voto_gen:voto_paso, factor_key=TRUE)
+head(migracion)
 
-df = datos[,c("voto", "voto_paso")]
-df$id = 1:nrow(datos)
-df = gather(df, voto, paso, voto:voto_paso, factor_key=TRUE)
 
-
-df %>%
-  ggplot(aes(x = voto, fill = paso)) +
+migracion %>%
+  ggplot(aes(x = escenario, fill = voto)) +
   geom_bar(stat = "count") +
   scale_fill_viridis_d()
 
 library(ggalluvial)
-df %>%
-  ggplot(aes(x = voto,
-             stratum = paso,
+migracion %>%
+  ggplot(aes(x = escenario,
+             stratum = voto,
              alluvium = id,
-             fill = paso)) +
+             fill = voto)) +
   geom_stratum(alpha = 0.5) +
   geom_flow() +
   # scale_fill_viridis_d() +
-  scale_fill_manual(values=c("white", "red", "blue",
-                                    "yellow", "violet", "grey","skyblue")) +
+  scale_fill_manual(values=c("yellow", "purple", "blue",
+                                    "white", "white", "orange","skyblue")) +
                                       theme_minimal() +
   theme(legend.position = "bottom",
         axis.title.y = element_text(angle = 0, hjust = 0)) +
-  geom_segment(aes( # adds an arrow to indicate that time is moving from right to left
+  geom_segment(aes(
     x = 0.75, xend = 2.16,
     y = 0, yend = 0),
     arrow = arrow(length=unit(0.30,"cm"), 
                   ends="first", 
                   type = "closed"))
+
