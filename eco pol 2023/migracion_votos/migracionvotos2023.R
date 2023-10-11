@@ -2,8 +2,11 @@ rm(list=ls())
 library(googlesheets4)
 library(tidyverse)
 
+#getwd()
+#setwd("/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/migracion_votos/"); getwd()
+
 getwd()
-setwd("/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/"); getwd()
+setwd("/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/migracion_votos/"); getwd()
 
 #gs4_deauth()
 #gs4_auth()
@@ -59,4 +62,4 @@ migracion %>%
     arrow = arrow(length=unit(0.30,"cm"), 
                   ends="first", 
                   type = "closed"))
-#ggsave("migracion_plot.jpeg", last_plot())
+#ggsave("/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/migracion_votos/migracion_plot.jpeg", last_plot())
