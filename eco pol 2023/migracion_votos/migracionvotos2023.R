@@ -23,11 +23,14 @@ head(migracion)
 class(migracion)
 migracion <- as.data.frame(migracion); class(migracion)
 
+migracion <- migracion %>% select(id, voto_paso, voto_gen)
+head(migracion)
+
 ##########################################
 
 #df = datos[,c("voto", "voto_paso")]
 #df$id = 1:nrow(datos)
-migracion = gather(migracion, escenario, voto, voto_gen:voto_paso, factor_key=TRUE)
+migracion = gather(migracion, escenario, voto, voto_paso:voto_gen, factor_key=TRUE)
 head(migracion)
 
 
