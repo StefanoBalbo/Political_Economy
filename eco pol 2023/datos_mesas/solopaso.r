@@ -1,6 +1,8 @@
 rm(list=ls())
 
-setwd("/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/datos_mesas"); getwd()
+#setwd("/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/datos_mesas"); getwd()
+setwd("/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/"); getwd()
+
 lapply(c("tidyverse", "rvest", "janitor", "data.table", "rio", "here", "dplyr"), require, character.only = TRUE)
 
 #carga de datos
