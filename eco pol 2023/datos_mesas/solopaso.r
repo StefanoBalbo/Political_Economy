@@ -1,8 +1,10 @@
-setwd("/Users/rafah/Desktop/Facultad/eco pol/")
-lapply(c("tidyverse", "rvest", "janitor", "data.table", "rio","here","dplyr"), require, character.only=TRUE)
+rm(list=ls())
+
+setwd("/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/datos_mesas"); getwd()
+lapply(c("tidyverse", "rvest", "janitor", "data.table", "rio", "here", "dplyr"), require, character.only = TRUE)
 
 #carga de datos
-mesas<-import("votacion.csv",setclass="data.table",encoding="UTF-8")
+mesas <- import("votacion.csv", setclass =" data.table", encoding="UTF-8")
 head(mesas)
 
 #mesas <- mesas[,total:=sum(votos[tipovoto_id=="1"]),by=c("distrito_id","seccion_id","circuito_id","mesa_id","eleccion_id")]
@@ -18,7 +20,7 @@ departamentos<-import("seccion.csv",setclass="data.table",encoding="UTF-8")
 table(mesas$cargo_id)
 
 #cargo/s a investigar
-presidenciales<-mesas[cargo_id=='1']
+presidenciales <- mesas[cargo_id == '1']
 table(presidenciales$cargo_id)
 
 #eleccion/es a investigar
