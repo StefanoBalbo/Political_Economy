@@ -12,4 +12,5 @@ eleccion_id,descripcion,anio,recuento_tipo,padron_tipo,eleccion_tipo,path_origen
 13,Generales 2021 - Provisorios,2021,PROVISORIO,NORMAL,GENERAL,dine-resultados-electorales/2021-provisorios_generales/ResultadosElectorales.csv
 14,PASO 2023 - Provisorios,2023,PROVISORIO,NORMAL,PASO,dine-resultados-electorales/2023-provisorios_paso/ResultadosElectorales.csv
 5,PASO 2015 - Provisorios,2015,PROVISORIO,NORMAL,PASO,dine-resultados-electorales/2015-provisorios_paso/ResultadosElectorales.csv
+15,Generales 2023 - Provisorios,2023,PROVISORIO,NORMAL,GENERAL,dine-resultados-electorales/2023-provisorios_generales/ResultadosElectorales_2023_Generales.csv
 10,PASO 2019 - Provisorios,2019,PROVISORIO,NORMAL,PASO,dine-resultados-electorales/2019-provisorios_paso/ResultadosElectorales.csv

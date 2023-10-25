@@ -1,6 +1,7 @@
 ############################### ECO POL 2023 ##################################
 rm(list=ls())
 
+library(installr)
 library(dplyr)
 library(data.table)
 library(tidyverse)
@@ -8,12 +9,28 @@ library(rvest)
 library(janitor)
 library(rio)
 library(here)
+library(tmap)
+library(sf)
+library(glue)
+library(scales)
+library(htmltools)
+library(leaflet)
 
 ############################### DATOS MESAS ###################################
 
 directorio <- "/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/"
 #directorio <- "/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/"
+
 setwd(directorio); getwd()
+
+############################################################################
+
+url <- "https://socialstats.la/archivos/argentina/elecciones/elecciones.csv.7z"
+file <- "/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/elecciones.zip"
+download.file(url, file)
+unzip(file, exdir = directorio)
+
+############################################################################
 
 {
   print("Importamos los datos")
@@ -23,7 +40,7 @@ setwd(directorio); getwd()
   tdv <- import("tipovoto.csv",setclass="data.table",encoding="UTF-8")
   elecciontipo <- import("eleccion.csv",setclass="data.table",encoding="UTF-8")
   agrupaciones <- import("agrupacion.csv",setclass="data.table",encoding="UTF-8")
-  seccion<-import("seccion.csv",setclass="data.table",encoding="UTF-8")
+#seccion<-import("seccion.csv",setclass="data.table",encoding="UTF-8")
 #listas <- fread(paste0(directorio, "lista.csv"), sep = ",", dec = ".")
 #mesas <-  fread(paste0(directorio, "mesa.csv"), sep = ",", dec = ".")
 #circuito <- fread(paste0(directorio, "circuito.csv"), sep = ",", dec = ".")
@@ -32,15 +49,10 @@ setwd(directorio); getwd()
 
 head(datos)
 head(agrupaciones)
-#head(listas)
-#head(mesas)
 cargos
 tdv
 elecciontipo
-#head(circuito)
 table(provincias$nombre); names(provincias)
-head(seccion)
-#head(seccion_prov)
 
 
 ############################### PREPARACIÓN ###################################
@@ -81,6 +93,7 @@ elecciontipo <- elecciontipo[, -c(2, 7)]; names(elecciontipo)
 
 datos <- left_join(datos_provincias, elecciontipo, by = "eleccion_id")
 head(datos)
+table(datos$eleccion_tipo)
 names(datos); rm(datos_provincias, elecciontipo)
 
 # Tipo de voto
@@ -99,7 +112,6 @@ head(datos2)
 datos <- datos2; rm(datos2, tdv); names(datos)
 
 ############################################################################
-#rm(circuito, listas, seccion, seccion_prov, mesas)
 
 head(datos)
 table(datos$eleccion_tipo)
@@ -109,13 +121,16 @@ datos$eleccion_tipo <- ifelse(datos$eleccion_tipo == "GENERAL", "GENERALES", dat
 table(datos$tdv)
 table(datos$distrito_nombre)
 
-getwd()
-saveRDS(datos, "datos.rda", compress = FALSE)
-#write.csv(datos, "datos.csv")
-
+#getwd()
+#saveRDS(datos, "datos.rda", compress = FALSE)
+#saveRDS(agrupaciones, "agrupaciones.rda", compress = FALSE)
 #rm(list=ls())
 
+
 ############################# ELECCIONES PRESIDENCIALES #############################
+
+#load("datos.rda")
+#load("agrupaciones.rda")
 
 names(agrupaciones)
 agrupaciones <- agrupaciones[, -4]
@@ -132,6 +147,7 @@ table(datos$cargo_nombre)
     filter(cargo_nombre == "Presidente")
 }
 
+rm(datos)
 head(datos_presidencial)
 
 {
@@ -184,6 +200,12 @@ datos_presidencial <- datos_agrupacion; rm(datos_agrupacion)
 head(datos_presidencial)
 table(datos_presidencial$eleccion_tipo)
 table(datos_presidencial$anio)
+table(datos_presidencial$agrupacion_nombre)
+
+#saveRDS(datos_presidencial, "datos_presidenciales.rda", compress = FALSE)
+
+#load("datos_presidenciales.rda")
+
 
 # FILTRADO POR AÑOS ELECTORALES
 {
@@ -246,3 +268,97 @@ BALL2023 <- datos_presidencial %>%
   filter(anio == "2023")
 }
 ################################
+
+rm(datos_presidencial)
+
+######################################### MAPAS #########################################
+
+##################### POR PROVINCIAS
+provs <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/provincia.shp"); names(provs)
+provincias <- import("distrito.csv", setclass = "data.table", encoding = "UTF-8"); names(provs)
+
+table(provs$nam)
+table(provincias$nombre)
+
+provs$nam <- case_when(as.character(provs$nam)== "Tierra del Fuego, Antártida e Islas del Atlántico Sur" ~ "Tierra del Fuego",
+                       as.character(provs$nam) == "Ciudad Autónoma de Buenos Aires" ~ "Ciudad Autónoma Bs.As.",
+                       TRUE ~ provs$nam
+)
+
+provs <- rename(provs, nombre = nam); names(provs)
+names(provincias)
+
+capa_provincial <- left_join(provs, provincias, by = "nombre")
+names(capa_provincial); rm(provincias, provs)
+
+head(capa_provincial)
+
+head(GEN2023)
+head(PASO2023)
+
+table(capa_provincial$nombre)
+
+table(GEN2023$distrito_nombre)
+table(PASO2023$distrito_nombre)
+
+capa_provincial <- rename(capa_provincial, distrito_nombre = nombre); names(capa_provincial)
+names(GEN2023)
+names(PASO2023)
+
+head(capa_provincial)
+capa_provincial <- capa_provincial[, -c(1, 2, 3, 4, 6, 7 ,8 , 9, 10, 11)]; head(capa_provincial)
+
+
+# Debería hacer un group_by y/o un sum() en los datos electorales antes de juntar y graficar? ver
+
+# The next line of code merges the data with the geography:
+map_data_GEN <- merge(capa_provincial, GEN2023, by = "distrito_nombre")
+map_data_PASO <- merge(capa_provincial, PASO2023, by = "distrito_nombre")
+
+
+
+
+
+
+tmap_mode('view')
+tmap_options(check.and.fix = TRUE)
+mapas <-  tm_basemap(c(Satelite = "Esri.WorldImagery", Politico = "OpenStreetMap.DE")) +
+tm_shape(capa_provincial) +
+  tm_fill("white", alpha = 0) +
+  tm_borders("black", lwd = 1.5) +
+tm_shape(voto) +
+tm_polygons("", style = "quantile", palette ="RdYlGn") +
+mapas
+
+
+
+##################### POR DEPARTAMENTO
+dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/departamento.shp"); names(dptos)
+seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
+
+table(dptos$nam)
+table(seccion$nombre)
+
+dptos <- rename(dptos, nombre = nam); names(dptos)
+names(seccion)
+
+capa_departamental <- left_join(dptos, seccion, by = "nombre")
+names(capa_departamental)
+
+na <- is.na(capa_departamental)
+sum(na) # Genera NA por =/= nombres
+
+
+
+##########################################
+
+#tmap_mode('view')
+#tmap_options(check.and.fix = TRUE)
+#mapas <-  tm_basemap(c(Satelite = "Esri.WorldImagery", Politico = "OpenStreetMap.DE")) +
+#  tm_shape(Dptos_Imp) +
+#  tm_polygons("", style = "quantile", palette ="RdYlGn")+
+#  tm_shape(dptos) +
+#  tm_fill("white", alpha = 0)+
+#  tm_borders("black", lwd = 1.5)
+#mapas
+
