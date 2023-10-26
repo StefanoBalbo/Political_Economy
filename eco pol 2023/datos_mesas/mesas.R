@@ -330,9 +330,7 @@ names(GEN2023)
 names(PASO2023)
 names(capa_provincial)
 
-############# ############# ############# ############# ############# #############
 
-# PENDIENTES DE REVISAR:
 
 # Left_join geometrías y elecciones # Mapas
 
