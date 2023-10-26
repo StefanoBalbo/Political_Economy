@@ -2,6 +2,7 @@
 rm(list=ls())
 
 library(installr)
+library(R.utils)
 library(dplyr)
 library(data.table)
 library(tidyverse)
@@ -18,17 +19,24 @@ library(leaflet)
 
 ############################### DATOS MESAS ###################################
 
-directorio <- "/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/"
-#directorio <- "/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/"
+directorio <- "C:\\Users\\IDECOR\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas"
+#directorio <- "C:\\Users\\stefa\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas"
 
 setwd(directorio); getwd()
 
 ############################################################################
 
 url <- "https://socialstats.la/archivos/argentina/elecciones/elecciones.csv.7z"
-file <- "/Users/IDECOR/Documents/Code/Political_Economy/eco pol 2023/datos_mesas/elecciones.zip"
+file <- "C:\\Users\\IDECOR\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas\\elecciones.csv.7z"
 download.file(url, file)
-unzip(file, exdir = directorio)
+
+winrar_path <- "C:\\Program Files\\WinRAR\\WinRAR.exe"
+
+command <- paste(shQuote(winrar_path), "x", shQuote(file), shQuote(directorio))
+
+system(command, wait = TRUE)
+
+list.files(directorio)
 
 ############################################################################
 
@@ -308,47 +316,59 @@ names(PASO2023)
 head(capa_provincial)
 capa_provincial <- capa_provincial[, -c(1, 2, 3, 4, 6, 7 ,8 , 9, 10, 11)]; head(capa_provincial)
 
+st_write(capa_provincial, "provincias.gpkg") # Guardamos geometrías provinciales
 
-# Debería hacer un group_by y/o un sum() en los datos electorales antes de juntar y graficar? ver
+class(GEN2023); class(PASO2023)
+setDT(GEN2023)
+setDT(PASO2023)
+class(GEN2023); class(PASO2023)
+
+fwrite(GEN2023, "GEN2023.csv") # Guardamos elecciones presidenciales 2023
+fwrite(PASO2023, "PASO2023.csv")
+
+names(GEN2023)
+names(PASO2023)
+names(capa_provincial)
+
+############# ############# ############# ############# ############# #############
+
+# PENDIENTES DE REVISAR:
+
+# Left_join geometrías y elecciones # Mapas
+
+map_data_GEN <- capa_provincial[GEN2023, on = .(distrito_nombre), nomatch = 0]
+
+map_data_PASO <- capa_provincial[PASO2023, on = .(distrito_nombre), nomatch = 0]
 
 # The next line of code merges the data with the geography:
-map_data_GEN <- merge(capa_provincial, GEN2023, by = "distrito_nombre")
-map_data_PASO <- merge(capa_provincial, PASO2023, by = "distrito_nombre")
+#map_data_GEN <- merge(capa_provincial, GEN2023, by = "distrito_nombre")
+#map_data_PASO <- merge(capa_provincial, PASO2023, by = "distrito_nombre")
 
-
-
-
-
-
-tmap_mode('view')
-tmap_options(check.and.fix = TRUE)
-mapas <-  tm_basemap(c(Satelite = "Esri.WorldImagery", Politico = "OpenStreetMap.DE")) +
-tm_shape(capa_provincial) +
-  tm_fill("white", alpha = 0) +
-  tm_borders("black", lwd = 1.5) +
-tm_shape(voto) +
-tm_polygons("", style = "quantile", palette ="RdYlGn") +
-mapas
-
-
+#tmap_mode('view')
+#tmap_options(check.and.fix = TRUE)
+#mapas <-  tm_basemap(c(Satelite = "Esri.WorldImagery", Politico = "OpenStreetMap.DE")) +
+#tm_shape(capa_provincial) +
+#  tm_fill("white", alpha = 0) +
+#  tm_borders("black", lwd = 1.5) +
+#tm_shape(voto) +
+#tm_polygons("", style = "quantile", palette ="RdYlGn") +
+#mapas
 
 ##################### POR DEPARTAMENTO
-dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/departamento.shp"); names(dptos)
-seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
+#dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/departamento.shp"); names(dptos)
+#seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
 
-table(dptos$nam)
-table(seccion$nombre)
+#table(dptos$nam)
+#table(seccion$nombre)
 
-dptos <- rename(dptos, nombre = nam); names(dptos)
-names(seccion)
+#dptos <- rename(dptos, nombre = nam); names(dptos)
+#names(seccion)
 
-capa_departamental <- left_join(dptos, seccion, by = "nombre")
-names(capa_departamental)
+#capa_departamental <- left_join(dptos, seccion, by = "nombre")
+#names(capa_departamental)
 
-na <- is.na(capa_departamental)
-sum(na) # Genera NA por =/= nombres
-
-
+#na <- is.na(capa_departamental)
+#sum(na) # Genera NA por =/= nombres
 
 ##########################################
 
