@@ -332,15 +332,18 @@ names(capa_provincial)
 
 
 
+
 # Left_join geometrías y elecciones # Mapas
 
 map_data_GEN <- capa_provincial[GEN2023, on = .(distrito_nombre), nomatch = 0]
 
 map_data_PASO <- capa_provincial[PASO2023, on = .(distrito_nombre), nomatch = 0]
 
-# The next line of code merges the data with the geography:
+
 #map_data_GEN <- merge(capa_provincial, GEN2023, by = "distrito_nombre")
 #map_data_PASO <- merge(capa_provincial, PASO2023, by = "distrito_nombre")
+#map_data_GEN <- left_join(capa_provincial, GEN2023, by = "distrito_nombre")
+#map_data_PASO <- left_join(capa_provincial, PASO2023, by = "distrito_nombre")
 
 #tmap_mode('view')
 #tmap_options(check.and.fix = TRUE)
@@ -380,3 +383,15 @@ map_data_PASO <- capa_provincial[PASO2023, on = .(distrito_nombre), nomatch = 0]
 #  tm_borders("black", lwd = 1.5)
 #mapas
 
+
+##################### INFERENCIA ECOLÓGICA #####################
+# Ver Gary King
+
+library(ecoreg)
+library(eco) # ver: there is no package called ‘eco’
+library(ei)
+
+{
+GEN2023 <- import("GEN2023.csv", setclass =" data.table", encoding="UTF-8")
+PASO2023 <- import("PASO2023.csv", setclass =" data.table", encoding="UTF-8")
+}
