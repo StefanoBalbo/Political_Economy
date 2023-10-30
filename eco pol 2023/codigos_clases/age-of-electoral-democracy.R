@@ -1,7 +1,7 @@
 rm(list=ls())
 
 getwd()
-directorio <- "/Users/stefa/Documents/Code/Political_Economy/"
+directorio <- "/Users/stefa/Documents/Code/Political_Economy/eco pol 2023/codigos_clases/"
 setwd(directorio)
 
 # Load libraries/packages
@@ -9,7 +9,7 @@ lapply(c("rio","here","data.table","dplyr","tmap","sf","RColorBrewer","viridis",
 
 # Load data and geography using relative hierarchy
 dem <- read.csv("data/age-of-electoral-democracy.csv")
-#dem  <- rio::import(here("slides","epol","data","age-of-electoral-democracy.csv")) %>% data.table()
+dem  <- rio::import(here("data/age-of-electoral-democracy.csv")) %>% data.table()
 map <- st_read("data//") # FALTA ESTE MAPA
 map <- here("maps","World_Countries__Generalized_.shp") %>% st_read()
 
@@ -24,3 +24,4 @@ pal  <- c(rgb(253,231,37,maxColorValue=255),rgb(109,205,89,maxColorValue=255),rg
 
 tmap_mode("view")
 tm_shape(join) +tm_polygons("cat",palette=pal)
+
