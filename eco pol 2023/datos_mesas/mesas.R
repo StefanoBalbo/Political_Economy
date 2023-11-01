@@ -71,6 +71,7 @@ names(provincias)
 
 datos_provincias <- left_join(datos, provincias, by = "distrito_id")
 names(datos_provincias)
+head(datos_provincias)
 
 datos_provincias <- datos_provincias[, -c(12, 13)]
 datos_provincias <- rename(datos_provincias, distrito_nombre = nombre)
@@ -123,9 +124,10 @@ datos <- datos2; rm(datos2, tdv); names(datos)
 
 head(datos)
 table(datos$eleccion_tipo)
+gc()
 
 datos$eleccion_tipo <- ifelse(datos$eleccion_tipo == "GENERAL", "GENERALES", datos$eleccion_tipo); table(datos$eleccion_tipo)
-
+gc()
 table(datos$tdv)
 table(datos$distrito_nombre)
 
@@ -279,14 +281,20 @@ BALL2023 <- datos_presidencial %>%
 
 rm(datos_presidencial)
 
-######################################### MAPAS #########################################
 
-##################### POR PROVINCIAS
+###########################################################################################################################
+######################################### MAPAS ###########################################################################
+###########################################################################################################################
+
+##################### POR PROVINCIAS ####################################
+
 provs <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/provincia.shp"); names(provs)
-provincias <- import("distrito.csv", setclass = "data.table", encoding = "UTF-8"); names(provs)
+provincias <- rio::import("distrito.csv", setclass = "data.table", encoding = "UTF-8"); names(provs)
 
 table(provs$nam)
 table(provincias$nombre)
+class(provs$nam)
+class(provincias$nombre)
 
 provs$nam <- case_when(as.character(provs$nam)== "Tierra del Fuego, Antártida e Islas del Atlántico Sur" ~ "Tierra del Fuego",
                        as.character(provs$nam) == "Ciudad Autónoma de Buenos Aires" ~ "Ciudad Autónoma Bs.As.",
@@ -303,85 +311,145 @@ head(capa_provincial)
 
 head(GEN2023)
 head(PASO2023)
+#head(BALL2023)
 
 table(capa_provincial$nombre)
 
 table(GEN2023$distrito_nombre)
 table(PASO2023$distrito_nombre)
+#table(BALL2023$distrito_nombre)
 
 capa_provincial <- rename(capa_provincial, distrito_nombre = nombre); names(capa_provincial)
 names(GEN2023)
 names(PASO2023)
+#names(BALL2023)
 
 head(capa_provincial)
 capa_provincial <- capa_provincial[, -c(1, 2, 3, 4, 6, 7 ,8 , 9, 10, 11)]; head(capa_provincial)
+class(capa_provincial)
 
-st_write(capa_provincial, "provincias.gpkg") # Guardamos geometrías provinciales
+# Guardamos geometrías provinciales
+st_write(capa_provincial, "provincias.gpkg")
 
-class(GEN2023); class(PASO2023)
+class(GEN2023); class(PASO2023); class(BALL2023)
 setDT(GEN2023)
 setDT(PASO2023)
-class(GEN2023); class(PASO2023)
+setDT(BALL2023)
+class(GEN2023); class(PASO2023); class(BALL2023)
 
-fwrite(GEN2023, "GEN2023.csv") # Guardamos elecciones presidenciales 2023
+# Guardamos elecciones presidenciales 2023
+fwrite(GEN2023, "GEN2023.csv")
 fwrite(PASO2023, "PASO2023.csv")
-
-names(GEN2023)
-names(PASO2023)
-names(capa_provincial)
+#fwrite(BALL2023, "BALL2023.csv")
 
 
+rm(list=ls())
+######## Mapa por provincias
+{
+  capa_provincial <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/provincias.gpkg")
+  GEN2023 <- import("GEN2023.csv", setclass =" data.table", encoding="UTF-8")
+  PASO2023 <- import("PASO2023.csv", setclass =" data.table", encoding="UTF-8")
+  #BALL2023 <- import("BALL2023.csv", setclass =" data.table", encoding="UTF-8")
+}
+
+class(GEN2023)
+GEN2023 = data.frame(GEN2023)
 
 
-# Left_join geometrías y elecciones # Mapas
+votos = GEN2023 %>% 
+  group_by(distrito_nombre, agrupacion_nombre) %>% 
+  summarise(votos = sum(votos))
+votos
 
-map_data_GEN <- capa_provincial[GEN2023, on = .(distrito_nombre), nomatch = 0]
+totales = GEN2023 %>% 
+  group_by(distrito_nombre) %>% 
+  summarise(totales = sum(votos))
+totales
 
-map_data_PASO <- capa_provincial[PASO2023, on = .(distrito_nombre), nomatch = 0]
+votos = left_join(votos, totales)
+votos; rm(totales)
+votos$prop = votos$votos / votos$totales
+votos
 
+votos$prop <- (votos$prop)*100
+votos
+class(votos$prop)
 
-#map_data_GEN <- merge(capa_provincial, GEN2023, by = "distrito_nombre")
-#map_data_PASO <- merge(capa_provincial, PASO2023, by = "distrito_nombre")
-#map_data_GEN <- left_join(capa_provincial, GEN2023, by = "distrito_nombre")
-#map_data_PASO <- left_join(capa_provincial, PASO2023, by = "distrito_nombre")
+mapa_votos = left_join(votos, capa_provincial, by = "distrito_nombre")
+mapa_votos
 
-#tmap_mode('view')
-#tmap_options(check.and.fix = TRUE)
-#mapas <-  tm_basemap(c(Satelite = "Esri.WorldImagery", Politico = "OpenStreetMap.DE")) +
-#tm_shape(capa_provincial) +
-#  tm_fill("white", alpha = 0) +
-#  tm_borders("black", lwd = 1.5) +
-#tm_shape(voto) +
-#tm_polygons("", style = "quantile", palette ="RdYlGn") +
-#mapas
+class(mapa_votos)
+mapa_votos = st_as_sf(mapa_votos, sf_column_name = "geom")
+# mapa = mapview::mapview(mapa_votos, zcol = "votos")
 
-##################### POR DEPARTAMENTO
-#dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/departamento.shp"); names(dptos)
-#seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
+mapa_votos$agrupacion_nombre = gsub("/", " ", mapa_votos$agrupacion_nombre)
 
-#table(dptos$nam)
-#table(seccion$nombre)
+mapview_facet <- function(x,f, z) {
+  
+  criteria=split(x,x[[f]])
+  nms = paste(deparse(substitute(x)), names(criteria), sep = "-")
+  for (i in 1:length(criteria)) {
+    map=mapview::mapview(criteria[[i]], layer.name = nms[i], z = z)
+    assign(paste0("map_",i), map)
+  }
+  set=list(map_1)
+  for (i in 2:length(criteria)) {set=append(set, get(paste0("map_",i)))}
+  leafsync::latticeView(set)
+}
 
-#dptos <- rename(dptos, nombre = nam); names(dptos)
-#names(seccion)
-
-#capa_departamental <- left_join(dptos, seccion, by = "nombre")
-#names(capa_departamental)
-
-#na <- is.na(capa_departamental)
-#sum(na) # Genera NA por =/= nombres
+mapview_facet(x = mapa_votos, f = "agrupacion_nombre", z = "prop")
 
 ##########################################
 
-#tmap_mode('view')
-#tmap_options(check.and.fix = TRUE)
-#mapas <-  tm_basemap(c(Satelite = "Esri.WorldImagery", Politico = "OpenStreetMap.DE")) +
-#  tm_shape(Dptos_Imp) +
-#  tm_polygons("", style = "quantile", palette ="RdYlGn")+
-#  tm_shape(dptos) +
-#  tm_fill("white", alpha = 0)+
-#  tm_borders("black", lwd = 1.5)
-#mapas
+library(tmap)
+library(tmaptools)
+#tmap_mode("view")
+tmap_mode("plot")
+tmap_options(check.and.fix = TRUE)
+mapa_votos = st_transform(mapa_votos, 22174)
+
+ver <-   tm_shape(mapa_votos) +
+  tm_scale_bar(position = c("left", "bottom")) + tm_compass(position = c("right", "top"), size = 1) +
+  tm_polygons(size = 0.12, style = "jenks", n = 8, col = "prop", alpha = 0.7, border.lwd = 0.3, 
+              title = "Porcentaje de Votos") +
+  tm_layout(legend.position = c("right", "center"),
+            legend.outside = TRUE,
+            title = 'Elecciones Generales 2023', 
+            title.position = c('center', 'top')) +
+  tm_facets(by = "agrupacion_nombre", ncol = 3, nrow = 2)
+ver
+tmap_save(ver, "mapa_generales_2023.png")
+
+########################################## ########################################## ##########################################
+
+
+##################### POR DEPARTAMENTOS ####################################
+
+rm(list=ls())
+
+dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/departamento.shp"); names(dptos)
+seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
+
+head(table(dptos$nam))
+head(table(seccion$nombre))
+
+dptos <- rename(dptos, nombre = nam); names(dptos)
+names(seccion)
+
+identical(dptos$nombre, seccion$nombre)
+dptos$nombre == seccion$nombre
+
+#arsenal::comparedf(dptos, seccion)
+
+
+
+
+capa_departamental <- left_join(dptos, seccion, by = "nombre")
+names(capa_departamental)
+
+na <- is.na(capa_departamental)
+sum(na) # Genera NA por =/= nombres
+
 
 
 ##################### INFERENCIA ECOLÓGICA #####################
@@ -391,7 +459,4 @@ library(ecoreg)
 library(eco) # ver: there is no package called ‘eco’
 library(ei)
 
-{
-GEN2023 <- import("GEN2023.csv", setclass =" data.table", encoding="UTF-8")
-PASO2023 <- import("PASO2023.csv", setclass =" data.table", encoding="UTF-8")
-}
+
