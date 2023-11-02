@@ -439,7 +439,14 @@ names(seccion)
 identical(dptos$nombre, seccion$nombre)
 dptos$nombre == seccion$nombre
 
-#arsenal::comparedf(dptos, seccion)
+head(seccion)
+head(dptos)
+
+table(seccion$seccion_id)
+table(seccion$distrito_id)
+table(dptos$gid)
+
+
 
 
 
@@ -449,6 +456,9 @@ names(capa_departamental)
 
 na <- is.na(capa_departamental)
 sum(na) # Genera NA por =/= nombres
+capa_departamental$nombre
+table(capa_departamental$nombre)
+
 
 
 
