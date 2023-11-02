@@ -17,6 +17,11 @@ library(scales)
 library(htmltools)
 library(leaflet)
 
+library(doParallel)
+cl <- makeCluster(6)
+registerDoParallel(cl)
+gc()
+
 ############################### DATOS MESAS ###################################
 
 directorio <- "C:\\Users\\IDECOR\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas"
@@ -337,13 +342,12 @@ setDT(PASO2023)
 setDT(BALL2023)
 class(GEN2023); class(PASO2023); class(BALL2023)
 
-# Guardamos elecciones presidenciales 2023
 fwrite(GEN2023, "GEN2023.csv")
 fwrite(PASO2023, "PASO2023.csv")
 #fwrite(BALL2023, "BALL2023.csv")
 
 
-rm(list=ls())
+rm(list=ls()) ######## ######## ######## ######## ######## ######## ######## 
 ######## Mapa por provincias
 {
   capa_provincial <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/provincias.gpkg")
@@ -405,6 +409,7 @@ library(tmap)
 library(tmaptools)
 #tmap_mode("view")
 tmap_mode("plot")
+#tmap_mode(mode = c("plot", "view"))
 tmap_options(check.and.fix = TRUE)
 mapa_votos = st_transform(mapa_votos, 22174)
 
