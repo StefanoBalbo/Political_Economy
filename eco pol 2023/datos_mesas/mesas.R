@@ -17,6 +17,7 @@ library(glue)
 library(scales)
 library(htmltools)
 library(leaflet)
+library(stringr)
 gc()
 
 ############################################################################
@@ -131,7 +132,7 @@ table(datos$cargo_nombre)
 
 
 #############################################################################################
-############################# FILTRO 1: ELECCIONES PRESIDENCIALES ###########################
+############################# ELECCIONES PRESIDENCIALES #####################################
 #############################################################################################
 {
   print("Filtramos elecciones presidenciales")
@@ -377,20 +378,12 @@ ver <-   tm_shape(mapa_votos) +
             title.position = c('center', 'top')) +
   tm_facets(by = "agrupacion_nombre", ncol = 3, nrow = 2)
 ver
-tmap_save(ver, "mapa_generales_2023.png")
+tmap_save(ver, "mapa_generales_2023_provs.png")
 
 rm(list=ls())
 
 
 ################ ################ MAPA DEPARTAMENTAL 2023 ################ ################
-
-# # # Geometrías departamentales # # #
-dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/Departamentos/departamentos.shp"); names(dptos)
-dptos <- dptos[dptos$OBJECTID!="488"&dptos$OBJECTID!="489",] # Elimina Islas Malvinas y Antartida
-gc() # Not to overload
-plot(dptos)
-head(dptos)
-
 {
   # Base mesas
 distrito <- import("distrito.csv", setclass = "data.table", encoding = "UTF-8")
@@ -415,41 +408,100 @@ colnames(deptGEO) <- c("index", "NOMBRE"); head(deptGEO)
 nrow(deptnames); nrow(deptGEO)
 
 # Quitamos ruido en nombres
+Encoding(deptnames$NOMBRE) <- "UTF-8"
+Encoding(deptGEO$NOMBRE) <- "UTF-8"
+head(deptGEO)
+head(deptnames)
+
 deptnames$NOMBRE <- iconv(deptnames$NOMBRE, "latin1", "UTF-8")
-deptnames$NOMBRE <- gsub("�", "Ñ", deptnames$NOMBRE)
-deptnames$NOMBRE <- gsub("[^[:alnum:] ]", "", deptnames$NOMBRE)
-deptnames$NOMBRE <- trimws(deptnames$NOMBRE)
-deptnames$NOMBRE <- gsub('"|\\d+|<be>', '', deptnames$NOMBRE); head(deptnames)
-
 deptGEO$NOMBRE <- iconv(deptGEO$NOMBRE, "latin1", "UTF-8")
-deptGEO$NOMBRE <- gsub("�", "Ñ", deptGEO$NOMBRE)
-deptGEO$NOMBRE <- gsub("[^[:alnum:] ]", "", deptGEO$NOMBRE)
+head(deptGEO)
+head(deptnames)
+
+deptnames$NOMBRE <- gsub("¾", "Ñ", deptnames$NOMBRE)
+deptGEO$NOMBRE <- gsub("¾", "Ñ", deptGEO$NOMBRE)
+head(deptGEO)
+head(deptnames)
+
+deptnames$NOMBRE <- str_replace(deptnames$NOMBRE, "^[0-9]+\\s", "")
+
+deptGEO$NOMBRE <- str_replace_all(deptGEO$NOMBRE, '"', '')
+deptnames$NOMBRE <- str_replace_all(deptnames$NOMBRE, '"', '')
+head(deptGEO)
+head(deptnames)
+
+deptnames$NOMBRE <- toupper(deptnames$NOMBRE)
+deptGEO$NOMBRE <- toupper(deptGEO$NOMBRE)
+deptnames$NOMBRE <- trimws(deptnames$NOMBRE)
 deptGEO$NOMBRE <- trimws(deptGEO$NOMBRE)
-deptGEO$NOMBRE <- gsub('"|\\d+|<be>', '', deptGEO$NOMBRE); head(deptGEO)
+head(deptGEO)
+head(deptnames)
 
-dept <- merge(deptnames, deptGEO, by = "NOMBRE")
+deptnames$NOMBRE <- gsub("[^[:print:]]", "", deptnames$NOMBRE)
+deptGEO$NOMBRE <- gsub("[^[:print:]]", "", deptGEO$NOMBRE)
+head(deptGEO)
+head(deptnames)
 
-nrow(dept)
+class(deptnames); class(deptGEO)
+class(deptnames$NOMBRE); class(deptGEO$NOMBRE)
 
-# check missing #
-na <- is.na(dept); sum(na) 
-rm(na)
-library(fuzzyjoin)
-library(stringdist)
-fuzzy_result <- stringdist_left_join(deptnames, deptGEO, by = c("NOMBRE" = "NOMBRE"), method = "jw", max_dist = 0.1)
-head(fuzzy_result)
-na <- is.na(fuzzy_result$index); sum(na) 
-na <- is.na(fuzzy_result$NOMBRE.y); sum(na) 
-rm(na, fuzzy_result)
+deptnames$index <- as.integer(str_extract(deptnames$DEPARTAMENTO, "\\d+"))
+head(deptnames)
+head(deptGEO)
+
+identical(deptnames$NOMBRE, deptGEO$NOMBRE)
+identical(deptnames$index, deptGEO$index)
+class(deptnames$index); class(deptGEO$index)
+
+dept <- left_join(deptnames, deptGEO, by = "NOMBRE"); head(dept)
+
+fwrite(dept, "Departamentos/namesdept.csv")
+rm(deptGEO); rm(deptnames)
+
+# check nombres #
+#mismatched_names <- setdiff(unique(deptnames$NOMBRE), unique(deptGEO$NOMBRE)); mismatched_names
+#mismatched_deptnames <- deptnames[deptnames$NOMBRE %in% mismatched_names,]
+#mismatched_deptGEO <- deptGEO[deptGEO$NOMBRE %in% mismatched_names,]
+#nrow(mismatched_deptGEO); nrow(#mismatched_deptnames) # Si nrow() = 0 son idénticos
+#rm(mismatched_deptGEO, mismatched_deptnames)
 # # # # # # # # 
 
+# check missing #
+#na <- is.na(dept); sum(na) 
+#rm(na)
+#library(fuzzyjoin)
+#library(stringdist)
+#fuzzy_result <- stringdist_left_join(deptnames, deptGEO, by = c("NOMBRE" = "NOMBRE"), method = "jw", max_dist = 0.1)
+#head(fuzzy_result)
+#na <- is.na(fuzzy_result$index); sum(na) 
+#na <- is.na(fuzzy_result$NOMBRE.y); sum(na) 
+#rm(na, fuzzy_result)
+# # # # # # # # 
 
-######## ######## ######## ######## ######## ######## ######## 
-######## ######## ######## ######## ######## ######## ######## 
-######## ######## ######## ######## ######## ######## ######## 
+# # # Geometrías departamentales # # #
+dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/Departamentos/departamentos.shp"); names(dptos)
+dptos <- dptos[dptos$OBJECTID!="488"&dptos$OBJECTID!="489",] # Elimina Islas Malvinas y Antartida
+gc() # Not to overload
+plot(dptos)
+
+head(dptos)
+head(dept)
+head(seccionxdistrito)
+
+identical(dept$NOMBRE, seccionxdistrito$DEPARTA)
+identical(dept$NOMBRE, dptos$DEPARTA)
+identical(dptos$DEPARTA, seccionxdistrito$DEPARTA)
+
+seccionxdistrito <- rename(seccionxdistrito, distrito_nombre = DEPARTA)
+dept <- rename(dept, distrito_nombre = NOMBRE)
+dptos <- rename(dptos, distrito_nombre = DEPARTA)
+
+merge <- left_join(seccionxdistrito, dept, by = "distrito_nombre")
+
+departamentos <- left_join(dptos, departamentos, by = "distrito_nombre")
 
 # Guardamos geometrías departamentales
-st_write(dptos, "departamentos.gpkg")
+st_write(departamentos, "departamentos.gpkg")
 rm(list=ls()) ######## ######## ######## ######## ######## ######## ######## 
 
 # Mapeamos
@@ -460,16 +512,57 @@ rm(list=ls()) ######## ######## ######## ######## ######## ######## ########
   #BALL2023 <- import("BALL2023.csv", setclass =" data.table", encoding="UTF-8")
 }
 
+class(GEN2023)
+GEN2023 = data.frame(GEN2023)
+PASO2023 = data.frame(PASO2023)
+# BALL2023 = data.frame(BALL2023)
+
+votos = GEN2023 %>% 
+  group_by(distrito_nombre, agrupacion_nombre) %>% 
+  summarise(votos = sum(votos))
+votos
+
+totales = GEN2023 %>% 
+  group_by(distrito_nombre) %>% 
+  summarise(totales = sum(votos))
+totales
 
 
+votos = left_join(votos, totales)
+votos; rm(totales)
+votos$prop = votos$votos / votos$totales
+votos
+
+votos$prop <- (votos$prop)*100
+votos
+class(votos$prop)
 
 
+mapa_votos = left_join(votos, capa_departamental, by = "distrito_nombre")
+mapa_votos
+class(mapa_votos)
 
+library(tmap)
+library(tmaptools)
+#tmap_mode("view")
+tmap_mode("plot")
+#tmap_mode(mode = c("plot", "view"))
+tmap_options(check.and.fix = TRUE)
+mapa_votos = st_transform(mapa_votos, 22174)
 
+ver <-   tm_shape(mapa_votos) +
+  tm_scale_bar(position = c("left", "bottom")) + tm_compass(position = c("right", "top"), size = 1) +
+  tm_polygons(size = 0.12, style = "jenks", n = 8, col = "prop", alpha = 0.7, border.lwd = 0.3, 
+              title = "Porcentaje de Votos") +
+  tm_layout(legend.position = c("right", "center"),
+            legend.outside = TRUE,
+            title = 'Elecciones Generales 2023', 
+            title.position = c('center', 'top')) +
+  tm_facets(by = "agrupacion_nombre", ncol = 3, nrow = 2)
+ver
+tmap_save(ver, "mapa_generales_2023_dptos.png")
 
-
-
-
+rm(list=ls())
 
 ######## ######## ######## ######## ######## ######## ######## 
 ######## ######## ######## ######## ######## ######## ######## 
