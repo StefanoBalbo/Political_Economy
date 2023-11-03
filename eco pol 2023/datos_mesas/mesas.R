@@ -392,26 +392,56 @@ dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/Departamento
 dptos <- dptos[dptos$OBJECTID!="488"&dptos$OBJECTID!="489",] # Elimina Islas Malvinas y Antartida
 gc() # Not to overload
 plot(dptos)
-
-seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
-
 head(dptos)
 
+{
+  # Base mesas
+distrito <- import("distrito.csv", setclass = "data.table", encoding = "UTF-8")
+seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8")
+  # Seba
+deptnames <- import("Departamentos/deptnames.csv", setclass = "data.table", encoding = "UTF-8")
+deptGEO <- import("Departamentos/deptnamesGEO.csv", setclass = "data.table", encoding = "UTF-8")
+}
+
+seccion$nombre <- toupper(seccion$nombre)
+seccion <- rename(seccion, DEPARTA = nombre); head(seccion)
+
+distrito$nombre <- toupper(distrito$nombre)
+distrito <- rename(distrito, PROVINCIA = nombre); head(distrito)
+
+seccionxdistrito <- merge(seccion, distrito, by = "distrito_id")
+seccionxdistrito <- seccionxdistrito[, -c(3)]; head(seccionxdistrito); rm(seccion, distrito)
+
+colnames(deptnames) <- c("DEPARTAMENTO", "NOMBRE"); head(deptnames)
+colnames(deptGEO) <- c("index", "NOMBRE"); head(deptGEO)
+
+nrow(deptnames); nrow(deptGEO)
+
+deptnames$NOMBRE <- gsub("\xbe", "Ñ", deptnames$NOMBRE)
+deptnames$NOMBRE <- gsub('"|\\d+|<be>', '', deptnames$NOMBRE); head(deptnames)
+deptnames$NOMBRE <- trimws(deptnames$NOMBRE) # Remove leading/trailing spaces
+
+dept <- merge(deptnames, deptGEO, by = "NOMBRE")
+
+nrow(dept)
+
+# check missing
+na <- is.na(dept); sum(na) 
+rm(na)
+library(fuzzyjoin)
+library(stringdist)
+fuzzy_result <- stringdist_left_join(deptnames, deptGEO, by = c("NOMBRE" = "NOMBRE"), method = "jw", max_dist = 0.1)
+head(fuzzy_result)
+na <- is.na(fuzzy_result$index); sum(na) 
+na <- is.na(fuzzy_result$NOMBRE.y); sum(na) 
+rm(na)
+# # # # # # # # 
 
 
 
-dptos <- rename(dptos, nombre = nam); names(dptos)
-names(seccion)
-identical(dptos$nombre, seccion$nombre)
-dptos$nombre == seccion$nombre
-head(seccion)
-head(dptos)
-table(seccion$seccion_id)
-table(seccion$distrito_id)
-table(dptos$gid)
 
-capa_departamental <- left_join(dptos, seccion, by = "nombre")
-names(capa_departamental)
+
+
 
 
 
@@ -419,6 +449,16 @@ names(capa_departamental)
 # Guardamos geometrías departamentales
 st_write(dptos, "departamentos.gpkg")
 rm(list=ls()) ######## ######## ######## ######## ######## ######## ######## 
+
+# Mapeamos
+{
+  capa_departamental <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/departamentos.gpkg")
+  GEN2023 <- import("GEN2023.csv", setclass =" data.table", encoding="UTF-8")
+  PASO2023 <- import("PASO2023.csv", setclass =" data.table", encoding="UTF-8")
+  #BALL2023 <- import("BALL2023.csv", setclass =" data.table", encoding="UTF-8")
+}
+
+
 
 
 
