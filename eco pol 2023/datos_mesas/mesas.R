@@ -1,4 +1,5 @@
 ############################### ECO POL 2023 ##################################
+
 rm(list=ls())
 
 library(installr)
@@ -16,35 +17,32 @@ library(glue)
 library(scales)
 library(htmltools)
 library(leaflet)
-
-library(doParallel)
+library(doParallel) # Not to overload
 cl <- makeCluster(6)
 registerDoParallel(cl)
 gc()
 
-############################### DATOS MESAS ###################################
+############################################################################
 
 directorio <- "C:\\Users\\IDECOR\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas"
 #directorio <- "C:\\Users\\stefa\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas"
-
 setwd(directorio); getwd()
 
-############################################################################
+################################## SCRAP ###################################
 
 url <- "https://socialstats.la/archivos/argentina/elecciones/elecciones.csv.7z"
 file <- "C:\\Users\\IDECOR\\Documents\\Code\\Political_Economy\\eco pol 2023\\datos_mesas\\elecciones.csv.7z"
 download.file(url, file)
 
 winrar_path <- "C:\\Program Files\\WinRAR\\WinRAR.exe"
-
 command <- paste(shQuote(winrar_path), "x", shQuote(file), shQuote(directorio))
-
 system(command, wait = TRUE)
-
 list.files(directorio)
 
-############################################################################
+rm(list=ls())
 
+############################################################################
+############################### DATOS MESAS ################################
 {
   print("Importamos los datos")
   datos <- import("votacion.csv", setclass =" data.table", encoding="UTF-8")
@@ -53,27 +51,16 @@ list.files(directorio)
   tdv <- import("tipovoto.csv",setclass="data.table",encoding="UTF-8")
   elecciontipo <- import("eleccion.csv",setclass="data.table",encoding="UTF-8")
   agrupaciones <- import("agrupacion.csv",setclass="data.table",encoding="UTF-8")
-#seccion<-import("seccion.csv",setclass="data.table",encoding="UTF-8")
-#listas <- fread(paste0(directorio, "lista.csv"), sep = ",", dec = ".")
-#mesas <-  fread(paste0(directorio, "mesa.csv"), sep = ",", dec = ".")
-#circuito <- fread(paste0(directorio, "circuito.csv"), sep = ",", dec = ".")
-#seccion_prov <-fread(paste0(directorio, "seccionprovincial.csv"), sep = ",", dec = ".")
 }
 
-head(datos)
-head(agrupaciones)
-cargos
-tdv
-elecciontipo
-table(provincias$nombre); names(provincias)
 
+############################ PREPARACIÓN BASE ###############################
 
-############################### PREPARACIÓN ###################################
-
-# Sumamos nombres distritos
+# # # Nombres distritos # # # 
 names(datos)
 names(provincias)
 
+gc() # Not to overload
 datos_provincias <- left_join(datos, provincias, by = "distrito_id")
 names(datos_provincias)
 head(datos_provincias)
@@ -82,7 +69,7 @@ datos_provincias <- datos_provincias[, -c(12, 13)]
 datos_provincias <- rename(datos_provincias, distrito_nombre = nombre)
 head(datos_provincias); rm(datos); rm(provincias)
 
-# Sumamos nombres cargos
+# # # Nombres cargos # # # 
 cargos
 table(datos_provincias$cargo_id)
 
@@ -101,72 +88,63 @@ table(datos_provincias$cargo_nombre)
 head(datos_provincias)
 rm(cargos)
 
-# Elección tipo y año
+# # # Elección tipo y año # # # 
 head(elecciontipo)
 elecciontipo <- elecciontipo[, -c(2, 7)]; names(elecciontipo)
 
+gc() # Not to overload
 datos <- left_join(datos_provincias, elecciontipo, by = "eleccion_id")
 head(datos)
 table(datos$eleccion_tipo)
 names(datos); rm(datos_provincias, elecciontipo)
 
-# Tipo de voto
+# # # Tipo de voto # # # 
 names(datos)
 head(tdv)
 
+gc() # Not to overload
 datos2 <- left_join(datos, tdv, by = "tipovoto_id")
 head(datos2); tdv
 
 datos2 <- rename(datos2, tdv = nombre); names(datos2)
-
 datos2 <- datos2[, -c(18)]
 
 head(datos2)
-
 datos <- datos2; rm(datos2, tdv); names(datos)
 
-############################################################################
-
+# # # Fix GENERAL =/= GENERALES  # # # 
 head(datos)
 table(datos$eleccion_tipo)
-gc()
 
-datos$eleccion_tipo <- ifelse(datos$eleccion_tipo == "GENERAL", "GENERALES", datos$eleccion_tipo); table(datos$eleccion_tipo)
-gc()
+gc() # Not to overload
+datos$eleccion_tipo <- ifelse(datos$eleccion_tipo == "GENERAL", 
+                              "GENERALES", datos$eleccion_tipo); table(datos$eleccion_tipo)
+
 table(datos$tdv)
 table(datos$distrito_nombre)
 
-#getwd()
-#saveRDS(datos, "datos.rda", compress = FALSE)
-#saveRDS(agrupaciones, "agrupaciones.rda", compress = FALSE)
-#rm(list=ls())
-
-
-############################# ELECCIONES PRESIDENCIALES #############################
-
-#load("datos.rda")
-#load("agrupaciones.rda")
-
+# # # Agrupaciones  # # #
 names(agrupaciones)
 agrupaciones <- agrupaciones[, -4]
 names(datos)
 
 head(agrupaciones)
 head(datos)
-
 table(datos$cargo_nombre)
 
+
+#############################################################################################
+############################# FILTRO 1: ELECCIONES PRESIDENCIALES ###########################
+#############################################################################################
 {
   print("Filtramos elecciones presidenciales")
   datos_presidencial <- datos %>%
     filter(cargo_nombre == "Presidente")
 }
+rm(datos); head(datos_presidencial)
 
-rm(datos)
-head(datos_presidencial)
-
+# # # Unificación nombres y recategorización # # #
 {
-# Unificación nombres y recategorización
 agrupaciones$nombre <- gsub("ALIANZA COMPROMISO FEDERAL", "Alianza Compromiso Federal", agrupaciones$nombre, fixed=TRUE)
 agrupaciones$nombre <- gsub("ALIANZA FRENTE DE IZQUIERDA Y DE LOS TRABAJADORES", "Alianza Frente de Izquierda y de los Trabajadores", agrupaciones$nombre, fixed=TRUE)
 agrupaciones$nombre <- gsub("ALIANZA FRENTE AMPLIO PROGRESISTA", "Alianza Frente Amplio Progresista", agrupaciones$nombre, fixed=TRUE)
@@ -189,12 +167,11 @@ agrupaciones$nombre <- gsub("MOVIMIENTO IZQUIERDA JUVENTUD DIGNIDAD", "MOVIMIENT
 head(agrupaciones)
 head(datos_presidencial)
 
+gc() # Not to overload
 datos_agrupacion <- left_join(datos_presidencial, agrupaciones, by = c("agrupacion_id", "eleccion_id"))
 head(datos_agrupacion)
-
-datos_agrupacion <- rename(datos_agrupacion, agrupacion_nombre = nombre ); names(datos_agrupacion)
-
-rm(agrupaciones)
+datos_agrupacion <- rename(datos_agrupacion, agrupacion_nombre = nombre )
+names(datos_agrupacion); rm(agrupaciones)
 
 {
   print("Recategorizamos las agrupaciones en 7 coaliciones")
@@ -209,22 +186,15 @@ datos_agrupacion$agrupacion_nombre <- ifelse(datos_agrupacion$agrupacion_nombre 
 
 table(datos_agrupacion$agrupacion_nombre)
 head(datos_agrupacion)
-
 datos_presidencial <- datos_agrupacion; rm(datos_agrupacion)
-
 head(datos_presidencial)
 table(datos_presidencial$eleccion_tipo)
 table(datos_presidencial$anio)
 table(datos_presidencial$agrupacion_nombre)
 
-#saveRDS(datos_presidencial, "datos_presidenciales.rda", compress = FALSE)
-
-#load("datos_presidenciales.rda")
-
-
-# FILTRADO POR AÑOS ELECTORALES
+################ ################ ################ ################ 
 {
-  print("ELECCIONES 2011")
+  print("ELECCIONES AÑO 2011")
 PASO2011 <- datos_presidencial %>%
   filter(eleccion_tipo == "PASO") %>%
   filter(anio == "2011")
@@ -232,14 +202,10 @@ PASO2011 <- datos_presidencial %>%
 GEN2011 <- datos_presidencial %>%
   filter(eleccion_tipo == "GENERALES") %>%
   filter(anio == "2011")
-
-#BALL2011 <- datos_presidencial %>%
-#  filter(eleccion_tipo == "BALLOTAGE") %>%
-#  filter(anio == "2011")
 }
-################################
+################ ################ ################ ################ 
 {
-  print("ELECCIONES 2015")
+  print("ELECCIONES AÑO 2015")
 PASO2015 <- datos_presidencial %>%
   filter(eleccion_tipo == "PASO") %>%
   filter(anio == "2015")
@@ -252,9 +218,9 @@ BALL2015 <- datos_presidencial %>%
   filter(eleccion_tipo == "BALLOTAGE") %>%
   filter(anio == "2015")
 }
-################################
+################ ################ ################ ################ 
 {
-  print("ELECCIONES 2019")
+  print("ELECCIONES AÑO 2019")
 PASO2019 <- datos_presidencial %>%
   filter(eleccion_tipo == "PASO") %>%
   filter(anio == "2019")
@@ -262,14 +228,10 @@ PASO2019 <- datos_presidencial %>%
 GEN2019 <- datos_presidencial %>%
   filter(eleccion_tipo == "GENERALES") %>%
   filter(anio == "2019")
-
-#BALL2019 <- datos_presidencial %>%
-#  filter(eleccion_tipo == "BALLOTAGE") %>%
-#  filter(anio == "2019")
 }
-################################
+################ ################ ################ ################ 
 {
-  print("ELECCIONES 2023")
+  print("ELECCIONES AÑO 2023")
 PASO2023 <- datos_presidencial %>%
   filter(eleccion_tipo == "PASO") %>%
   filter(anio == "2023")
@@ -282,20 +244,41 @@ BALL2023 <- datos_presidencial %>%
   filter(eleccion_tipo == "BALLOTAGE") %>%
   filter(anio == "2023")
 }
-################################
+################ ################ ################ ################ 
 
 rm(datos_presidencial)
 
+class(GEN2023); class(PASO2023); class(BALL2023); class(GEN2011); class(PASO2011); class(GEN2015); class(PASO2015); class(BALL2015); class(GEN2019); class(PASO2019)
+
+setDT(GEN2023); setDT(PASO2023); setDT(BALL2023); setDT(GEN2011); setDT(PASO2011); setDT(GEN2015); setDT(PASO2015); setDT(BALL2015); setDT(GEN2019); setDT(PASO2019)
+
+class(GEN2023); class(PASO2023); class(BALL2023); class(GEN2011); class(PASO2011); class(GEN2015); class(PASO2015); class(BALL2015); class(GEN2019); class(PASO2019)
+
+# # # Guardamos presidenciales filtradas # # # 
+
+fwrite(GEN2011, "GEN2011.csv")
+fwrite(PASO2011, "PASO2011.csv")
+
+fwrite(GEN2015, "GEN2015.csv")
+fwrite(PASO2015, "PASO2015.csv")
+fwrite(BALL2015, "BALL2015.csv")
+
+fwrite(GEN2019, "GEN2019.csv")
+fwrite(PASO2019, "PASO2019.csv")
+
+fwrite(GEN2023, "GEN2023.csv")
+fwrite(PASO2023, "PASO2023.csv")
+fwrite(BALL2023, "BALL2023.csv")
+
 
 ###########################################################################################################################
-######################################### MAPAS ###########################################################################
-###########################################################################################################################
+######################################### MAPAS ##########################################################################
 
-##################### POR PROVINCIAS ####################################
+################ ################ MAPA PROVINCIAL 2023 ################ ################ 
 
+# # # Geometrías provinciales # # # 
 provs <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/provincia.shp"); names(provs)
 provincias <- rio::import("distrito.csv", setclass = "data.table", encoding = "UTF-8"); names(provs)
-
 table(provs$nam)
 table(provincias$nombre)
 class(provs$nam)
@@ -303,54 +286,27 @@ class(provincias$nombre)
 
 provs$nam <- case_when(as.character(provs$nam)== "Tierra del Fuego, Antártida e Islas del Atlántico Sur" ~ "Tierra del Fuego",
                        as.character(provs$nam) == "Ciudad Autónoma de Buenos Aires" ~ "Ciudad Autónoma Bs.As.",
-                       TRUE ~ provs$nam
-)
+                       TRUE ~ provs$nam)
 
 provs <- rename(provs, nombre = nam); names(provs)
 names(provincias)
 
+gc() # Not to overload
 capa_provincial <- left_join(provs, provincias, by = "nombre")
 names(capa_provincial); rm(provincias, provs)
-
 head(capa_provincial)
-
-head(GEN2023)
-head(PASO2023)
-#head(BALL2023)
-
 table(capa_provincial$nombre)
-
-table(GEN2023$distrito_nombre)
-table(PASO2023$distrito_nombre)
-#table(BALL2023$distrito_nombre)
-
 capa_provincial <- rename(capa_provincial, distrito_nombre = nombre); names(capa_provincial)
-names(GEN2023)
-names(PASO2023)
-#names(BALL2023)
-
-head(capa_provincial)
 capa_provincial <- capa_provincial[, -c(1, 2, 3, 4, 6, 7 ,8 , 9, 10, 11)]; head(capa_provincial)
 class(capa_provincial)
 
 # Guardamos geometrías provinciales
 st_write(capa_provincial, "provincias.gpkg")
-
-class(GEN2023); class(PASO2023); class(BALL2023)
-setDT(GEN2023)
-setDT(PASO2023)
-setDT(BALL2023)
-class(GEN2023); class(PASO2023); class(BALL2023)
-
-fwrite(GEN2023, "GEN2023.csv")
-fwrite(PASO2023, "PASO2023.csv")
-#fwrite(BALL2023, "BALL2023.csv")
-
-
 rm(list=ls()) ######## ######## ######## ######## ######## ######## ######## 
-######## Mapa por provincias
+
+# Mapeamos
 {
-  capa_provincial <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/provincias.gpkg")
+ capa_provincial <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/provincias.gpkg")
   GEN2023 <- import("GEN2023.csv", setclass =" data.table", encoding="UTF-8")
   PASO2023 <- import("PASO2023.csv", setclass =" data.table", encoding="UTF-8")
   #BALL2023 <- import("BALL2023.csv", setclass =" data.table", encoding="UTF-8")
@@ -358,7 +314,8 @@ rm(list=ls()) ######## ######## ######## ######## ######## ######## ########
 
 class(GEN2023)
 GEN2023 = data.frame(GEN2023)
-
+PASO2023 = data.frame(PASO2023)
+# BALL2023 = data.frame(BALL2023)
 
 votos = GEN2023 %>% 
   group_by(distrito_nombre, agrupacion_nombre) %>% 
@@ -370,6 +327,7 @@ totales = GEN2023 %>%
   summarise(totales = sum(votos))
 totales
 
+
 votos = left_join(votos, totales)
 votos; rm(totales)
 votos$prop = votos$votos / votos$totales
@@ -378,6 +336,7 @@ votos
 votos$prop <- (votos$prop)*100
 votos
 class(votos$prop)
+
 
 mapa_votos = left_join(votos, capa_provincial, by = "distrito_nombre")
 mapa_votos
@@ -403,8 +362,6 @@ mapview_facet <- function(x,f, z) {
 
 mapview_facet(x = mapa_votos, f = "agrupacion_nombre", z = "prop")
 
-##########################################
-
 library(tmap)
 library(tmaptools)
 #tmap_mode("view")
@@ -425,44 +382,54 @@ ver <-   tm_shape(mapa_votos) +
 ver
 tmap_save(ver, "mapa_generales_2023.png")
 
-########################################## ########################################## ##########################################
-
-
-##################### POR DEPARTAMENTOS ####################################
-
 rm(list=ls())
 
-dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/IGN/departamento.shp"); names(dptos)
+
+################ ################ MAPA DEPARTAMENTAL 2023 ################ ################
+
+# # # Geometrías departamentales # # #
+dptos <- st_read("~/Code/Political_Economy/eco pol 2023/datos_mesas/Departamentos/departamentos.shp"); names(dptos)
+dptos <- dptos[dptos$OBJECTID!="488"&dptos$OBJECTID!="489",] # Elimina Islas Malvinas y Antartida
+gc() # Not to overload
+plot(dptos)
+
 seccion <- import("seccion.csv", setclass = "data.table", encoding = "UTF-8"); names(seccion)
 
-head(table(dptos$nam))
-head(table(seccion$nombre))
+head(dptos)
+
+
+
 
 dptos <- rename(dptos, nombre = nam); names(dptos)
 names(seccion)
-
 identical(dptos$nombre, seccion$nombre)
 dptos$nombre == seccion$nombre
-
 head(seccion)
 head(dptos)
-
 table(seccion$seccion_id)
 table(seccion$distrito_id)
 table(dptos$gid)
 
-
-
-
-
-
 capa_departamental <- left_join(dptos, seccion, by = "nombre")
 names(capa_departamental)
 
-na <- is.na(capa_departamental)
-sum(na) # Genera NA por =/= nombres
-capa_departamental$nombre
-table(capa_departamental$nombre)
+
+
+
+# Guardamos geometrías departamentales
+st_write(dptos, "departamentos.gpkg")
+rm(list=ls()) ######## ######## ######## ######## ######## ######## ######## 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
