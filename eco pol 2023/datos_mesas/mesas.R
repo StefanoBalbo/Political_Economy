@@ -17,9 +17,6 @@ library(glue)
 library(scales)
 library(htmltools)
 library(leaflet)
-library(doParallel) # Not to overload
-cl <- makeCluster(6)
-registerDoParallel(cl)
 gc()
 
 ############################################################################
@@ -417,15 +414,24 @@ colnames(deptGEO) <- c("index", "NOMBRE"); head(deptGEO)
 
 nrow(deptnames); nrow(deptGEO)
 
-deptnames$NOMBRE <- gsub("\xbe", "Ñ", deptnames$NOMBRE)
+# Quitamos ruido en nombres
+deptnames$NOMBRE <- iconv(deptnames$NOMBRE, "latin1", "UTF-8")
+deptnames$NOMBRE <- gsub("�", "Ñ", deptnames$NOMBRE)
+deptnames$NOMBRE <- gsub("[^[:alnum:] ]", "", deptnames$NOMBRE)
+deptnames$NOMBRE <- trimws(deptnames$NOMBRE)
 deptnames$NOMBRE <- gsub('"|\\d+|<be>', '', deptnames$NOMBRE); head(deptnames)
-deptnames$NOMBRE <- trimws(deptnames$NOMBRE) # Remove leading/trailing spaces
+
+deptGEO$NOMBRE <- iconv(deptGEO$NOMBRE, "latin1", "UTF-8")
+deptGEO$NOMBRE <- gsub("�", "Ñ", deptGEO$NOMBRE)
+deptGEO$NOMBRE <- gsub("[^[:alnum:] ]", "", deptGEO$NOMBRE)
+deptGEO$NOMBRE <- trimws(deptGEO$NOMBRE)
+deptGEO$NOMBRE <- gsub('"|\\d+|<be>', '', deptGEO$NOMBRE); head(deptGEO)
 
 dept <- merge(deptnames, deptGEO, by = "NOMBRE")
 
 nrow(dept)
 
-# check missing
+# check missing #
 na <- is.na(dept); sum(na) 
 rm(na)
 library(fuzzyjoin)
@@ -434,17 +440,13 @@ fuzzy_result <- stringdist_left_join(deptnames, deptGEO, by = c("NOMBRE" = "NOMB
 head(fuzzy_result)
 na <- is.na(fuzzy_result$index); sum(na) 
 na <- is.na(fuzzy_result$NOMBRE.y); sum(na) 
-rm(na)
+rm(na, fuzzy_result)
 # # # # # # # # 
 
 
-
-
-
-
-
-
-
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
 
 # Guardamos geometrías departamentales
 st_write(dptos, "departamentos.gpkg")
@@ -469,10 +471,9 @@ rm(list=ls()) ######## ######## ######## ######## ######## ######## ########
 
 
 
-
-
-
-
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
 
 ##################### INFERENCIA ECOLÓGICA #####################
 # Ver Gary King
