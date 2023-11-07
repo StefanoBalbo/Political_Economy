@@ -502,8 +502,12 @@ gc() # Not to overload
 merge <- left_join(seccionxdistrito, dept, by = "seccion_nombre")
 departamentos <- left_join(dptos, merge, by = "seccion_nombre")
 
+head(departamentos)
+departamentos <- departamentos[, -c(1, 5, 6, 7, 9, 10, 11, 12)]
+departamentos <- rename(departamentos, distrito_nombre = PROVINCIA.x); head(departamentos)
+
 # Guardamos geometrías departamentales
-st_write(departamentos, "departamentos.gpkg")
+st_write(departamentos, "departamentos.gpkg", append = FALSE)
 rm(list=ls()) ######## ######## ######## ######## ######## ######## ######## 
 
 # Mapeamos
@@ -519,13 +523,22 @@ GEN2023 = data.frame(GEN2023)
 PASO2023 = data.frame(PASO2023)
 # BALL2023 = data.frame(BALL2023)
 
+head(capa_departamental)
+
+dptos = capa_departamental %>% 
+  group_by(seccion_nombre, geom) %>% 
+  summarise(distrito = distrito_nombre,
+            distrito_id = distrito_id,
+            seccion_id = seccion_id)
+dptos; rm(capa_departamental)
+
 votos = GEN2023 %>% 
-  group_by(distrito_nombre, agrupacion_nombre) %>% 
+  group_by(seccion_id, agrupacion_nombre) %>% 
   summarise(votos = sum(votos))
 votos
 
 totales = GEN2023 %>% 
-  group_by(distrito_nombre) %>% 
+  group_by(seccion_id) %>% 
   summarise(totales = sum(votos))
 totales
 
@@ -539,8 +552,8 @@ votos$prop <- (votos$prop)*100
 votos
 class(votos$prop)
 
-
-mapa_votos = left_join(votos, capa_departamental, by = "distrito_nombre")
+gc() # Not to overload
+mapa_votos = left_join(votos, dptos, by = "seccion_id")
 mapa_votos
 class(mapa_votos)
 
