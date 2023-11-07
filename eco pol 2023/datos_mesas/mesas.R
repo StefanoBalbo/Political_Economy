@@ -553,7 +553,7 @@ votos
 class(votos$prop)
 
 gc() # Not to overload
-mapa_votos = left_join(votos, dptos, by = "seccion_id")
+mapa_votos = left_join(votos, dptos, by = "seccion_id", multiple = "all")
 mapa_votos
 class(mapa_votos)
 
@@ -563,6 +563,7 @@ library(tmaptools)
 tmap_mode("plot")
 #tmap_mode(mode = c("plot", "view"))
 tmap_options(check.and.fix = TRUE)
+mapa_votos = st_as_sf(mapa_votos)
 mapa_votos = st_transform(mapa_votos, 22174)
 
 ver <-   tm_shape(mapa_votos) +
