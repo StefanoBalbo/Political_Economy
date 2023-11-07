@@ -335,7 +335,7 @@ votos$prop <- (votos$prop)*100
 votos
 class(votos$prop)
 
-
+gc() # Not to overload
 mapa_votos = left_join(votos, capa_provincial, by = "distrito_nombre")
 mapa_votos
 
@@ -368,6 +368,7 @@ tmap_mode("plot")
 tmap_options(check.and.fix = TRUE)
 mapa_votos = st_transform(mapa_votos, 22174)
 
+gc() # Not to overload
 ver <-   tm_shape(mapa_votos) +
   tm_scale_bar(position = c("left", "bottom")) + tm_compass(position = c("right", "top"), size = 1) +
   tm_polygons(size = 0.12, style = "jenks", n = 8, col = "prop", alpha = 0.7, border.lwd = 0.3, 
@@ -453,6 +454,7 @@ identical(deptnames$NOMBRE, deptGEO$NOMBRE)
 identical(deptnames$index, deptGEO$index)
 class(deptnames$index); class(deptGEO$index)
 
+gc() # Not to overload
 dept <- left_join(deptnames, deptGEO, by = "NOMBRE"); head(dept)
 
 fwrite(dept, "Departamentos/namesdept.csv")
@@ -492,13 +494,13 @@ identical(dept$NOMBRE, seccionxdistrito$DEPARTA)
 identical(dept$NOMBRE, dptos$DEPARTA)
 identical(dptos$DEPARTA, seccionxdistrito$DEPARTA)
 
-seccionxdistrito <- rename(seccionxdistrito, distrito_nombre = DEPARTA)
-dept <- rename(dept, distrito_nombre = NOMBRE)
-dptos <- rename(dptos, distrito_nombre = DEPARTA)
+seccionxdistrito <- rename(seccionxdistrito, seccion_nombre = DEPARTA)
+dept <- rename(dept, seccion_nombre = NOMBRE)
+dptos <- rename(dptos, seccion_nombre = DEPARTA)
 
-merge <- left_join(seccionxdistrito, dept, by = "distrito_nombre")
-
-departamentos <- left_join(dptos, departamentos, by = "distrito_nombre")
+gc() # Not to overload
+merge <- left_join(seccionxdistrito, dept, by = "seccion_nombre")
+departamentos <- left_join(dptos, merge, by = "seccion_nombre")
 
 # Guardamos geometrías departamentales
 st_write(departamentos, "departamentos.gpkg")
