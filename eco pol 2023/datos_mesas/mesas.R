@@ -581,6 +581,16 @@ tmap_save(ver, "mapa_generales_2023_dptos.png")
 rm(list=ls())
 
 ######## ######## ######## ######## ######## ######## ######## 
+
+# armar tabla GENERALES pres 2019, legs 2021, pres 2023
+
+# id dptos / id provs / año / vote share K / vote share MM / vote share LIB / vote share PERON / vote share IZQ / vote share BLANCO
+
+# desempleo año a año por departamentos 2018-2019 - 2020-2021 - 2022-2023 
+
+
+
+
 ######## ######## ######## ######## ######## ######## ######## 
 ######## ######## ######## ######## ######## ######## ######## 
 
