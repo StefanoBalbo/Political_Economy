@@ -407,10 +407,10 @@ deptGEO <- import("Departamentos/deptnamesGEO.csv", setclass = "data.table", enc
 }
 
 seccion$nombre <- toupper(seccion$nombre)
-seccion <- rename(seccion, DEPARTA = nombre); head(seccion)
+seccion <- dplyr::rename(seccion, DEPARTA = nombre); head(seccion)
 
 distrito$nombre <- toupper(distrito$nombre)
-distrito <- rename(distrito, PROVINCIA = nombre); head(distrito)
+distrito <- dplyr::rename(distrito, PROVINCIA = nombre); head(distrito)
 
 seccionxdistrito <- merge(seccion, distrito, by = "distrito_id")
 seccionxdistrito <- seccionxdistrito[, -c(3)]; head(seccionxdistrito); rm(seccion, distrito)
@@ -466,6 +466,9 @@ identical(deptnames$NOMBRE, deptGEO$NOMBRE)
 identical(deptnames$index, deptGEO$index)
 class(deptnames$index); class(deptGEO$index)
 
+fwrite(deptGEO, "deptGEO.csv")
+fwrite(deptnames, "deptnames.csv")
+
 gc() # Not to overload
 dept <- left_join(deptnames, deptGEO, by = "NOMBRE"); head(dept)
 
@@ -506,9 +509,9 @@ identical(dept$NOMBRE, seccionxdistrito$DEPARTA)
 identical(dept$NOMBRE, dptos$DEPARTA)
 identical(dptos$DEPARTA, seccionxdistrito$DEPARTA)
 
-seccionxdistrito <- rename(seccionxdistrito, seccion_nombre = DEPARTA)
-dept <- rename(dept, seccion_nombre = NOMBRE)
-dptos <- rename(dptos, seccion_nombre = DEPARTA)
+seccionxdistrito <- dplyr::rename(seccionxdistrito, seccion_nombre = DEPARTA)
+dept <- dplyr::rename(dept, seccion_nombre = NOMBRE)
+dptos <- dplyr::rename(dptos, seccion_nombre = DEPARTA)
 
 gc() # Not to overload
 merge <- left_join(seccionxdistrito, dept, by = "seccion_nombre")
@@ -516,7 +519,7 @@ departamentos <- left_join(dptos, merge, by = "seccion_nombre")
 
 head(departamentos)
 departamentos <- departamentos[, -c(1, 5, 6, 7, 9, 10, 11, 12)]
-departamentos <- rename(departamentos, distrito_nombre = PROVINCIA.x); head(departamentos)
+departamentos <- dplyr::rename(departamentos, distrito_nombre = PROVINCIA.x); head(departamentos)
 
 # Guardamos geometrías departamentales
 st_write(departamentos, "departamentos.gpkg", append = FALSE)
@@ -592,13 +595,31 @@ tmap_save(ver, "mapa_generales_2023_dptos.png")
 
 rm(list=ls())
 
-
+######## ######## ######## ######## ######## ######## ######## 
 ######## ######## ######## ######## ######## ######## ######## 
 
 # Filtrado: Tabla GENERALES pres 2019, legs 2021, pres 2023
 # id dptos / id provs / año / vote share
 
-GEN2023 <- fread("GEN2023.csv"); head(GEN2023)
+dptos <- fread("deptGEO.csv"); head(dptos)
+secciones <- fread("seccion.csv"); head(secciones)
+secciones$nombre <- toupper(secciones$nombre); head(secciones)
+secciones <- dplyr::rename(secciones, NOMBRE = nombre); names(secciones) 
+
+dept <- merge(dptos, secciones, by = "NOMBRE")
+dept <- dplyr::rename(dept, seccion_nombre = NOMBRE); names(dept) 
+head(dept)
+
+generales <- fread("GEN2023.csv"); head(generales)
+
+gc()
+#GEN2023 <- merge(generales, dept, by = "seccion_id", allow.cartesian = TRUE); head(GEN2023)
+#rm(dept, dptos, generales, secciones)
+
+
+
+
+
 total_votos <- as.numeric(sum(GEN2023$votos))
 
 votos = GEN2023 %>% 
