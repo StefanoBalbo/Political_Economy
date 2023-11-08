@@ -619,8 +619,12 @@ votos$agrupacion_nombre = gsub(" ", "_", votos$agrupacion_nombre)
 head(votos)
 tail(votos)
 
-votos2 = gather(votos, agrupacion_nombre, prop, Cambiemos_Macrismo:Peronismo_Federal_Tercera_Via, factor_key=TRUE)
 
+votos2 <- votos %>% select(seccion_id, distrito_nombre, anio, prop, agrupacion_nombre)
+head(votos2)
+
+#votos2 = gather(votos2, agrupacion, vote_share, agrupacion_nombre:prop, factor_key=TRUE)
+#head(votos2)
 
 
 
