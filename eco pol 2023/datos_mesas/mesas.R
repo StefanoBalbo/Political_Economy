@@ -57,16 +57,20 @@ rm(list=ls())
 
 # # # Nombres distritos # # # 
 names(datos)
+table(datos$seccion_id)
+table(datos$distrito_id)
 names(provincias)
 
 gc() # Not to overload
-datos_provincias <- left_join(datos, provincias, by = "distrito_id")
-names(datos_provincias)
+datos_provincias <- left_join(datos, provincias, by = "distrito_id"); names(datos_provincias)
 head(datos_provincias)
 
 datos_provincias <- datos_provincias[, -c(12, 13)]
-datos_provincias <- rename(datos_provincias, distrito_nombre = nombre)
+datos_provincias <- dplyr::rename(datos_provincias, distrito_nombre = nombre); names(datos_provincias)
 head(datos_provincias); rm(datos); rm(provincias)
+
+table(datos_provincias$seccion_id)
+table(datos_provincias$distrito_id)
 
 # # # Nombres cargos # # # 
 cargos
@@ -102,10 +106,9 @@ names(datos)
 head(tdv)
 
 gc() # Not to overload
-datos2 <- left_join(datos, tdv, by = "tipovoto_id")
-head(datos2); tdv
+datos2 <- left_join(datos, tdv, by = "tipovoto_id"); head(datos2)
 
-datos2 <- rename(datos2, tdv = nombre); names(datos2)
+datos2 <- dplyr::rename(datos2, tdv = nombre); names(datos2)
 datos2 <- datos2[, -c(18)]
 
 head(datos2)
@@ -140,7 +143,15 @@ table(datos$cargo_nombre)
   datos_presidencial <- datos %>%
     filter(cargo_nombre == "Presidente")
 }
+
+table(datos$seccion_id)
+table(datos$distrito_id)
+
 rm(datos); head(datos_presidencial)
+
+table(datos_presidencial$seccion_id)
+table(datos_presidencial$distrito_id)
+
 
 # # # Unificación nombres y recategorización # # #
 {
