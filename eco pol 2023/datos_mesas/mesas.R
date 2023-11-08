@@ -589,6 +589,42 @@ rm(list=ls())
 # desempleo año a año por departamentos 2018-2019 - 2020-2021 - 2022-2023 
 
 
+GEN2023 <- fread("GEN2023.csv")
+GEN2019 <- fread("GEN2019.csv")
+
+head(GEN2023)
+
+votos = GEN2023 %>% 
+  group_by(seccion_id, agrupacion_nombre, distrito_nombre, anio) %>% 
+  summarise(votos = sum(votos))
+votos
+
+totales = GEN2023 %>% 
+  group_by(seccion_id) %>% 
+  summarise(totales = sum(votos))
+totales
+
+votos = left_join(votos, totales)
+votos; rm(totales)
+votos$prop = votos$votos / votos$totales
+votos
+votos$prop <- (votos$prop)*100
+votos
+
+votos <- as.data.frame(votos); class(votos)
+
+votos$agrupacion_nombre = gsub("/", "_", votos$agrupacion_nombre)
+votos$agrupacion_nombre = gsub(" ", "_", votos$agrupacion_nombre)
+
+head(votos)
+tail(votos)
+
+votos2 = gather(votos, agrupacion_nombre, prop, Cambiemos_Macrismo:Peronismo_Federal_Tercera_Via, factor_key=TRUE)
+
+
+
+
+
 
 
 ######## ######## ######## ######## ######## ######## ######## 
