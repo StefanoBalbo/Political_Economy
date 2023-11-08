@@ -602,7 +602,7 @@ GEN2023 <- fread("GEN2023.csv"); head(GEN2023)
 total_votos <- as.numeric(sum(GEN2023$votos))
 
 votos = GEN2023 %>% 
-  group_by(seccion_id, agrupacion_nombre, distrito_nombre, anio) %>% 
+  group_by(distrito_id, distrito_nombre, seccion_id, circuito_id, agrupacion_nombre, anio) %>% 
   summarise(votos = sum(votos))
 votos
 
@@ -613,8 +613,8 @@ totales
 
 #votos = left_join(votos, totales)
 #votos
-#votos$prop = (votos$votos / votos$totales)
-votos$prop = (votos$votos / total_votos) * 100
+#votos$prop = (votos$votos / votos$totales) * 100
+votos$prop = votos$votos / total_votos
 votos
 
 votos <- as.data.frame(votos); class(votos)
@@ -625,11 +625,11 @@ votos$agrupacion_nombre = gsub(" ", "_", votos$agrupacion_nombre)
 head(votos)
 tail(votos)
 
-votos_melt <- melt(votos, id.vars = c("seccion_id", "distrito_nombre", "anio", "agrupacion_nombre"), 
+votos_melt <- melt(votos, id.vars = c("distrito_id", "distrito_nombre", "seccion_id", "circuito_id", "anio", "agrupacion_nombre"), 
                    measure.vars = "prop")
 votos_melt[is.na(votos_melt)] <- 0
 
-votos_cast <- reshape2::dcast(votos_melt, seccion_id + distrito_nombre + anio ~ agrupacion_nombre, 
+votos_cast <- reshape2::dcast(votos_melt, distrito_id + distrito_nombre + seccion_id + circuito_id + anio ~ agrupacion_nombre, 
                               value.var = "value")
 head(votos_cast)
 
@@ -648,6 +648,8 @@ sum(votos_cast$Peronismo_Federal_Tercera_Via) +
 sum(votos_cast$Izquierda) +
 sum(votos_cast$Conservadurismo_Nacionalismo)
 
+rm(votos_melt, votos, totales, GEN2023)
+
 fwrite(votos_cast, "Generales2023.csv")
 rm(list=ls())
 
@@ -657,7 +659,7 @@ GEN2019 <- fread("GEN2019.csv"); head(GEN2019)
 total_votos <- as.numeric(sum(GEN2019$votos))
 
 votos = GEN2019 %>% 
-  group_by(seccion_id, agrupacion_nombre, distrito_nombre, anio) %>% 
+  group_by(distrito_id, distrito_nombre, seccion_id, circuito_id, agrupacion_nombre, anio) %>% 
   summarise(votos = sum(votos))
 votos
 
@@ -668,8 +670,8 @@ totales
 
 #votos = left_join(votos, totales)
 #votos
-#votos$prop = (votos$votos / votos$totales)
-votos$prop = (votos$votos / total_votos) * 100
+#votos$prop = (votos$votos / votos$totales) * 100
+votos$prop = votos$votos / total_votos
 votos
 
 votos <- as.data.frame(votos); class(votos)
@@ -680,11 +682,11 @@ votos$agrupacion_nombre = gsub(" ", "_", votos$agrupacion_nombre)
 head(votos)
 tail(votos)
 
-votos_melt <- melt(votos, id.vars = c("seccion_id", "distrito_nombre", "anio", "agrupacion_nombre"), 
+votos_melt <- melt(votos, id.vars = c("distrito_id", "distrito_nombre", "seccion_id", "circuito_id", "anio", "agrupacion_nombre"), 
                    measure.vars = "prop")
 votos_melt[is.na(votos_melt)] <- 0
 
-votos_cast <- reshape2::dcast(votos_melt, seccion_id + distrito_nombre + anio ~ agrupacion_nombre, 
+votos_cast <- reshape2::dcast(votos_melt, distrito_id + distrito_nombre + seccion_id + circuito_id + anio ~ agrupacion_nombre, 
                               value.var = "value")
 head(votos_cast)
 
@@ -703,10 +705,18 @@ sum(votos_cast$Cambiemos_Macrismo) +
   sum(votos_cast$Izquierda) +
   sum(votos_cast$Conservadurismo_Nacionalismo)
 
+rm(votos_melt, votos, totales, GEN2019)
+
 fwrite(votos_cast, "Generales2019.csv")
 rm(list=ls())
 
 # desempleo año a año por departamentos 2018-2019 - 2020-2021 - 2022-2023 
+
+
+
+
+
+
 
 
 
