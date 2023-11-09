@@ -768,12 +768,12 @@ rm(empleo, empleo1, empleo2, nombres, puestos_emp, puestos_total)
 head(tabla_empleo)
 tail(tabla_empleo)
 
-fwrite(tabla_empleo, "Desempleo/puestos_merged")
+fwrite(tabla_empleo, "Desempleo/puestos_merged.csv")
 rm(list=ls())
 
 
 # Calculo de indicadores
-empleo <- fread("Desempleo/puestos_merged")
+empleo <- fread("Desempleo/puestos_merged.csv")
 summary(empleo)
 table(empleo$anio)
 
@@ -832,7 +832,7 @@ tail(empleo)
 table(empleo$anio)
 
 {
-print("Generamos variación interanual en %% respecto al año 2018.")
+print("Generamos variación interanual en %% respecto al año 2018.") # Respecto a la MEDIA (prom_anual)
 empleo <- empleo %>%
   group_by(nombre_departamento_indec, nombre_provincia_indec) %>%
   arrange(anio) %>%
@@ -842,11 +842,10 @@ empleo <- empleo %>% filter(!is.na(var_interanual))
 empleo <- empleo %>% filter(!is.na(var_interanual_porc))
 }
 
-rm(empleo2018, empleo2019, empleo2020, empleo2021)
 head(empleo)
 tail(empleo)
 
-fwrite(empleo, "Desempleo/empleo_final")
+fwrite(empleo, "Desempleo/empleo_final.csv")
 rm(list=ls())
 
 
@@ -855,16 +854,17 @@ rm(list=ls())
 
 ##################### DATOS POBLACIÓN CENSO 2010 #####################
 web <- read_html("https://es.wikipedia.org/wiki/Anexo:Departamentos_y_partidos_de_Argentina_por_superficie_y_poblaci%C3%B3n_(2010)")
-node <- html_nodes(web, "table")
-tabla_poblacion <- html_table(node)[[2]]
+node <- html_nodes(web, "table"); node
+tabla_poblacion <- html_table(node)[[1]]
 head(tabla_poblacion)
 
+names(tabla_poblacion) <- c('area_nac','rank_nac','area_prov','rank_prov','nombre_departamento', 'nombre_provincia', 'Cabecera', 'Municipios', 'anio_fundacion', 'area', 'poblacion_2010')
+head(tabla_poblacion)
+tabla_poblacion <- tabla_poblacion[-c(1, 2), ]; head(tabla_poblacion)
 
-
-
-
-
-
+summary(tabla_poblacion)
+#tabla_poblacion$poblacion_2010 <- as.numeric(tabla_poblacion$poblacion_2010); head(tabla_poblacion)
+#summary(tabla_poblacion)
 
 
 
