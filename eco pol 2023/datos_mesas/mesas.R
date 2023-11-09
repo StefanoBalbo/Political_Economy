@@ -872,13 +872,13 @@ summary(tabla_poblacion)
 tabla_poblacion$poblacion_2010 <- as.numeric(tabla_poblacion$poblacion_2010); class(tabla_poblacion$poblacion_2010)
 head(tabla_poblacion)
 
+tabla_poblacion <- tabla_poblacion[,-c(1, 2, 3, 4, 9, 10)]; head(tabla_poblacion)
+
 na <- is.na(tabla_poblacion)
 sum(na) #????????????? pendiente buscarlo
 
-
-
-
-
+fwrite(tabla_poblacion, "poblaciondptos.csv")
+rm(list=ls())
 
 
 
