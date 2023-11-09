@@ -862,9 +862,14 @@ names(tabla_poblacion) <- c('area_nac','rank_nac','area_prov','rank_prov','nombr
 head(tabla_poblacion)
 tabla_poblacion <- tabla_poblacion[-c(1, 2), ]; head(tabla_poblacion)
 
-summary(tabla_poblacion)
-#tabla_poblacion$poblacion_2010 <- as.numeric(tabla_poblacion$poblacion_2010); head(tabla_poblacion)
+tabla_poblacion <- as.data.frame(tabla_poblacion); class(tabla_poblacion)
+
+tabla_poblacion$poblacion_2010 = gsub(" ", ".", tabla_poblacion$poblacion_2010)
+head(tabla_poblacion)
+
 #summary(tabla_poblacion)
+#tabla_poblacion$poblacion_2010 <- as.numeric(tabla_poblacion$poblacion_2010); head(tabla_poblacion)
+#class(tabla_poblacion$poblacion_2010)
 
 
 
