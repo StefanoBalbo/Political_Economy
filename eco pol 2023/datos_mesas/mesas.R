@@ -19,6 +19,8 @@ library(htmltools)
 library(leaflet)
 library(stringr)
 library(reshape)
+library(lubridate)
+library(rvest)
 gc()
 
 ############################################################################
@@ -598,39 +600,24 @@ rm(list=ls())
 ######## ######## ######## ######## ######## ######## ######## 
 ######## ######## ######## ######## ######## ######## ######## 
 
-# Filtrado: Tabla GENERALES pres 2019, legs 2021, pres 2023
-# id dptos / id provs / año / vote share
+##################### TABLA FILTRADA #####################
 
-dptos <- fread("deptGEO.csv"); head(dptos)
+# 2023
 secciones <- fread("seccion.csv"); head(secciones)
 secciones$nombre <- toupper(secciones$nombre); head(secciones)
-secciones <- dplyr::rename(secciones, NOMBRE = nombre); names(secciones) 
-
-dept <- merge(dptos, secciones, by = "NOMBRE")
-dept <- dplyr::rename(dept, seccion_nombre = NOMBRE); names(dept) 
-head(dept)
-
+secciones <- dplyr::rename(secciones, seccion_nombre = nombre); names(secciones) 
 generales <- fread("GEN2023.csv"); head(generales)
 
 gc()
-#GEN2023 <- merge(generales, dept, by = "seccion_id", allow.cartesian = TRUE); head(GEN2023)
-#rm(dept, dptos, generales, secciones)
-
-
-
-
+GEN2023 <- inner_join(generales, secciones, by = c('seccion_id' = 'seccion_id', 'distrito_id' = 'distrito_id')); head(GEN2023)
 
 total_votos <- as.numeric(sum(GEN2023$votos))
 
+gc()
 votos = GEN2023 %>% 
-  group_by(distrito_id, distrito_nombre, seccion_id, circuito_id, agrupacion_nombre, anio) %>% 
+  group_by(distrito_id, distrito_nombre, seccion_id, seccion_nombre, circuito_id, agrupacion_nombre, anio) %>% 
   summarise(votos = sum(votos))
 votos
-
-totales = GEN2023 %>% 
-  group_by(seccion_id) %>% 
-  summarise(totales = sum(votos))
-totales
 
 #votos = left_join(votos, totales)
 #votos
@@ -646,13 +633,14 @@ votos$agrupacion_nombre = gsub(" ", "_", votos$agrupacion_nombre)
 head(votos)
 tail(votos)
 
-votos_melt <- melt(votos, id.vars = c("distrito_id", "distrito_nombre", "seccion_id", "circuito_id", "anio", "agrupacion_nombre"), 
+votos_melt <- melt(votos, id.vars = c("distrito_id", "distrito_nombre", "seccion_id", "seccion_nombre", "circuito_id", "anio", "agrupacion_nombre"), 
                    measure.vars = "prop")
 votos_melt[is.na(votos_melt)] <- 0
 
-votos_cast <- reshape2::dcast(votos_melt, distrito_id + distrito_nombre + seccion_id + circuito_id + anio ~ agrupacion_nombre, 
+votos_cast <- reshape2::dcast(votos_melt, distrito_id + distrito_nombre + seccion_id + seccion_nombre + circuito_id + anio ~ agrupacion_nombre, 
                               value.var = "value")
 head(votos_cast)
+tail(votos_cast)
 
 class(votos_cast$Cambiemos_Macrismo)
 sum(votos_cast$Cambiemos_Macrismo)
@@ -669,25 +657,26 @@ sum(votos_cast$Peronismo_Federal_Tercera_Via) +
 sum(votos_cast$Izquierda) +
 sum(votos_cast$Conservadurismo_Nacionalismo)
 
-rm(votos_melt, votos, totales, GEN2023)
-
 fwrite(votos_cast, "Generales2023.csv")
 rm(list=ls())
 
-# # #
 
-GEN2019 <- fread("GEN2019.csv"); head(GEN2019)
+# 2019
+secciones <- fread("seccion.csv"); head(secciones)
+secciones$nombre <- toupper(secciones$nombre); head(secciones)
+secciones <- dplyr::rename(secciones, seccion_nombre = nombre); names(secciones) 
+generales <- fread("GEN2019.csv"); head(generales)
+
+gc()
+GEN2019 <- inner_join(generales, secciones, by = c('seccion_id' = 'seccion_id', 'distrito_id' = 'distrito_id')); head(GEN2019)
+
 total_votos <- as.numeric(sum(GEN2019$votos))
 
+gc()
 votos = GEN2019 %>% 
-  group_by(distrito_id, distrito_nombre, seccion_id, circuito_id, agrupacion_nombre, anio) %>% 
+  group_by(distrito_id, distrito_nombre, seccion_id, seccion_nombre, circuito_id, agrupacion_nombre, anio) %>% 
   summarise(votos = sum(votos))
 votos
-
-totales = GEN2019 %>% 
-  group_by(seccion_id) %>% 
-  summarise(totales = sum(votos))
-totales
 
 #votos = left_join(votos, totales)
 #votos
@@ -703,13 +692,14 @@ votos$agrupacion_nombre = gsub(" ", "_", votos$agrupacion_nombre)
 head(votos)
 tail(votos)
 
-votos_melt <- melt(votos, id.vars = c("distrito_id", "distrito_nombre", "seccion_id", "circuito_id", "anio", "agrupacion_nombre"), 
+votos_melt <- melt(votos, id.vars = c("distrito_id", "distrito_nombre", "seccion_id", "seccion_nombre", "circuito_id", "anio", "agrupacion_nombre"), 
                    measure.vars = "prop")
 votos_melt[is.na(votos_melt)] <- 0
 
-votos_cast <- reshape2::dcast(votos_melt, distrito_id + distrito_nombre + seccion_id + circuito_id + anio ~ agrupacion_nombre, 
+votos_cast <- reshape2::dcast(votos_melt, distrito_id + distrito_nombre + seccion_id + seccion_nombre + circuito_id + anio ~ agrupacion_nombre, 
                               value.var = "value")
 head(votos_cast)
+tail(votos_cast)
 
 class(votos_cast$Cambiemos_Macrismo)
 sum(votos_cast$Cambiemos_Macrismo)
@@ -726,12 +716,148 @@ sum(votos_cast$Cambiemos_Macrismo) +
   sum(votos_cast$Izquierda) +
   sum(votos_cast$Conservadurismo_Nacionalismo)
 
-rm(votos_melt, votos, totales, GEN2019)
-
 fwrite(votos_cast, "Generales2019.csv")
 rm(list=ls())
 
-# desempleo año a año por departamentos 2018-2019 - 2020-2021 - 2022-2023 
+
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
+
+##################### DATOS DESEMPLEO #####################
+
+# desempleo año a año por departamentos 2020-2019 - 2020-2021 - 2022-2023 
+
+{
+  print("Importamos los datos")
+  puestos_total <- import("Desempleo/puestos_total_depto.csv", setclass =" data.table", encoding="UTF-8")
+  puestos_emp <- import("Desempleo/puestos_total_empresas_depto.csv", setclass =" data.table", encoding="UTF-8")
+  nombres <- import("Desempleo/diccionario_cod_depto.csv", setclass =" data.table", encoding="UTF-8")
+}
+
+head(puestos_total)
+head(puestos_emp)
+head(nombres)
+
+gc()
+empleo <- inner_join(puestos_total, nombres, by = c('codigo_departamento_indec'='codigo_departamento_indec', 'id_provincia_indec'='id_provincia_indec'))
+head(empleo)
+
+empleo$nombre_departamento_indec <- toupper(empleo$nombre_departamento_indec)
+empleo$nombre_provincia_indec <- toupper(empleo$nombre_provincia_indec)
+head(empleo)
+
+table(empleo$fecha)
+class(empleo$fecha)
+empleo$fecha <- as.POSIXlt(empleo$fecha,
+                         tryFormats = c("%d/%m/%Y"))
+class(empleo$fecha)
+empleo$anio = year(empleo$fecha); table(empleo$anio)
+head(empleo)
+tail(empleo)
+
+empleo1 <- empleo[, -c(1, 5, 6)]; head(empleo1)
+
+empleo2 <- empleo %>% 
+  group_by(anio, codigo_departamento_indec, nombre_departamento_indec, id_provincia_indec, nombre_provincia_indec) %>% 
+  summarise(totales_anio = sum(puestos))
+empleo2
+
+gc()
+tabla_empleo <- inner_join(empleo1, empleo2, by = c('codigo_departamento_indec'='codigo_departamento_indec', 'id_provincia_indec'='id_provincia_indec', 'anio' = 'anio'))
+rm(empleo, empleo1, empleo2, nombres, puestos_emp, puestos_total)
+head(tabla_empleo)
+tail(tabla_empleo)
+
+fwrite(tabla_empleo, "Desempleo/puestos_merged")
+rm(list=ls())
+
+
+# Calculo de indicadores
+empleo <- fread("Desempleo/puestos_merged")
+summary(empleo)
+table(empleo$anio)
+
+{
+  print("Filtramos por año agregando media y mediana anual, para cada departamento en los 4 años bajo análisis.")
+  
+  empleo2018 <- empleo %>% 
+    group_by(codigo_departamento_indec, nombre_departamento_indec, id_provincia_indec, nombre_provincia_indec, totales_anio) %>% 
+    filter(anio == "2018") %>% 
+    summarise(prom_mensual = mean(puestos),
+              mediana_mensual = median(puestos)) %>% 
+    summarise(prom_anual = mean(prom_mensual),
+              mediana_anual = median(mediana_mensual))
+  empleo2018$anio <- "2018"
+
+  empleo2019 <- empleo %>% 
+    group_by(codigo_departamento_indec, nombre_departamento_indec, id_provincia_indec, nombre_provincia_indec, totales_anio) %>% 
+    filter(anio == "2019") %>% 
+    summarise(prom_mensual = mean(puestos),
+              mediana_mensual = median(puestos)) %>% 
+    summarise(prom_anual = mean(prom_mensual),
+              mediana_anual = median(mediana_mensual))
+  empleo2019$anio <- "2019"
+
+  empleo2020 <- empleo %>% 
+    group_by(codigo_departamento_indec, nombre_departamento_indec, id_provincia_indec, nombre_provincia_indec, totales_anio) %>% 
+    filter(anio == "2020") %>% 
+    summarise(prom_mensual = mean(puestos),
+              mediana_mensual = median(puestos)) %>% 
+    summarise(prom_anual = mean(prom_mensual),
+              mediana_anual = median(mediana_mensual))
+  empleo2020$anio <- "2020"
+
+  empleo2021 <- empleo %>% 
+    group_by(codigo_departamento_indec, nombre_departamento_indec, id_provincia_indec, nombre_provincia_indec, totales_anio) %>% 
+    filter(anio == "2021") %>% 
+    summarise(prom_mensual = mean(puestos),
+              mediana_mensual = median(puestos)) %>% 
+    summarise(prom_anual = mean(prom_mensual),
+              mediana_anual = median(mediana_mensual))
+  empleo2021$anio <- "2021"
+}
+
+empleo2018
+tail(empleo2018)
+empleo2019
+tail(empleo2019)
+empleo2020
+tail(empleo2020)
+empleo2021
+tail(empleo2021)
+
+empleo <- rbind(empleo2018, empleo2019, empleo2020, empleo2021)
+head(empleo)
+tail(empleo)
+table(empleo$anio)
+
+{
+print("Generamos variación interanual en %% respecto al año 2018.")
+empleo <- empleo %>%
+  group_by(nombre_departamento_indec, nombre_provincia_indec) %>%
+  arrange(anio) %>%
+  mutate(var_interanual = prom_anual - lag(prom_anual),
+         var_interanual_porc = (var_interanual / lag(prom_anual)) * 100)
+empleo <- empleo %>% filter(!is.na(var_interanual))
+empleo <- empleo %>% filter(!is.na(var_interanual_porc))
+}
+
+rm(empleo2018, empleo2019, empleo2020, empleo2021)
+head(empleo)
+tail(empleo)
+
+fwrite(empleo, "Desempleo/empleo_final")
+rm(list=ls())
+
+
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
+
+##################### DATOS POBLACIÓN CENSO 2010 #####################
+web <- read_html("https://es.wikipedia.org/wiki/Anexo:Departamentos_y_partidos_de_Argentina_por_superficie_y_poblaci%C3%B3n_(2010)")
+node <- html_nodes(web, "table")
+tabla_poblacion <- html_table(node)[[2]]
+head(tabla_poblacion)
 
 
 
@@ -741,6 +867,15 @@ rm(list=ls())
 
 
 
+
+
+
+
+######## ######## ######## ######## ######## ######## ######## 
+######## ######## ######## ######## ######## ######## ######## 
+
+GEN2019 <- fread("Generales2019.csv"); head(GEN2019)
+GEN2023 <- fread("Generales2023.csv"); head(GEN2023)
 
 ######## ######## ######## ######## ######## ######## ######## 
 ######## ######## ######## ######## ######## ######## ######## 
