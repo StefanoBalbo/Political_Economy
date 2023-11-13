@@ -536,18 +536,65 @@ votos_final_long$distrito_nombre <- case_when(as.character(votos_final_long$dist
 table(votos_final_long$distrito_nombre)
 table(empleo_anio$distrito_nombre)
 
+#check1 <- as.data.frame(table(votos_final_long$seccion_nombre))
+#check2 <- as.data.frame(table(empleo_anio$seccion_nombre))
 table(votos_final_long$seccion_nombre)
 table(empleo_anio$seccion_nombre)
 
+votos_final_long$seccion_nombre <- case_when(as.character(votos_final_long$seccion_nombre) == "ZÁRATE" ~ "ZARATE",
+                                              as.character(votos_final_long$seccion_nombre) == "VICENTE LÓPEZ" ~ "VICENTE LOPEZ",
+                                              as.character(votos_final_long$seccion_nombre) == "VEINTICINCO DE MAYO" ~ "25 DE MAYO",
+                                              as.character(votos_final_long$seccion_nombre) == "UTRACÁN" ~ "UTRACAN",
+                                              as.character(votos_final_long$seccion_nombre) == "UNIÓN" ~ "UNION",
+                                              as.character(votos_final_long$seccion_nombre) == "ULLÚM" ~ "ULLUM",
+                                             as.character(votos_final_long$seccion_nombre) == "PRIMERO DE MAYO" ~ "1° DE MAYO",
+                                             as.character(votos_final_long$seccion_nombre) == "PCIA. DE LA PLAZA" ~ "PRESIDENCIA DE LA PLAZA",
+                                             as.character(votos_final_long$seccion_nombre) == "NUEVE DE JULIO" ~ "9 DE JULIO",
+                                              TRUE ~ votos_final_long$seccion_nombre)
+
+empleo_anio$seccion_nombre <- case_when(as.character(empleo_anio$seccion_nombre) == "ZÁRATE" ~ "ZARATE",
+                                             as.character(empleo_anio$seccion_nombre) == "VICENTE LÓPEZ" ~ "VICENTE LOPEZ",
+                                             as.character(empleo_anio$seccion_nombre) == "UTRACÁN" ~ "UTRACAN",
+                                             as.character(empleo_anio$seccion_nombre) == "UNIÓN" ~ "UNION",
+                                             as.character(empleo_anio$seccion_nombre) == "SILÍPICA" ~ "SILIPICA",
+                                             as.character(empleo_anio$seccion_nombre) == "RÍO GRANDE/TOLHUIN" ~ "RÍO GRANDE",
+                                            as.character(empleo_anio$seccion_nombre) == "QUEMÚ QUEMÚ" ~ "QUEMU QUEMU",
+                                        as.character(empleo_anio$seccion_nombre) == "PRESIDENTE ROQUE SÁENZ PEÑA" ~ "ROQUE SÁENZ PEÑA",
+                                        as.character(empleo_anio$seccion_nombre) == "PUELÉN" ~ "PUELEN",
+                                        as.character(empleo_anio$seccion_nombre) == "PUÁN" ~ "PUAN",
+                                        as.character(empleo_anio$seccion_nombre) == "PILAGÁS" ~ "PILAGAS",
+                                        as.character(empleo_anio$seccion_nombre) == "PACLÍN" ~ "PACLIN",
+                                        as.character(empleo_anio$seccion_nombre) == "JUAN BAUTISTA ALBERDI" ~ "ALBERDI",
+                                        
+                                             TRUE ~ empleo_anio$seccion_nombre)
 
 
 
+table(votos_final_long$seccion_nombre)
+table(empleo_anio$seccion_nombre)
+#rm(check1, check2)
 
+empleoanio2 <- empleo_anio
+empleoanio2$anio <- "2019"
+empleo_anio$anio <- "2023"
+empleoanio2$anio <- as.character(empleoanio2$anio)
+empleo_anio$anio <- as.character(empleo_anio$anio)
 
-#head(votos_final_long)
-#head(empleo_anio)
-#tabla_final <- inner_join(votos_final_long, empleo_anio, 
-#                          by = c('distrito_nombre'='distrito_nombre', 'seccion_nombre'='seccion_nombre'))
+head(empleo_anio); head(empleoanio2)
+
+empleo_anio <- rbind(empleo_anio, empleoanio2); head(empleo_anio); rm(empleoanio2)
+
+votos_final_long$anio <- as.character(votos_final_long$anio)
+head(votos_final_long)
+
+tabla_final <- left_join(votos_final_long, empleo_anio, 
+                          by = c('distrito_nombre'='distrito_nombre', 'seccion_nombre'='seccion_nombre', 'anio' = 'anio'))
+
+head(tabla_final)
+tail(tabla_final)
+fwrite(tabla_final, "Generales_Final.csv")
+
+rm(list=ls())
 
 
 ##################### DATOS POBLACIÓN CENSO 2010 #####################
